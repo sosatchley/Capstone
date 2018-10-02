@@ -3,30 +3,29 @@
 // Auto-Steer Simulation
 
 
-Agent t;
+Agent agent;
 
 void setup() {
   size(1000, 1000);
-  t = new Agent();
+  agent = new Agent();
 }
 
 void draw() {
   background(0);
-  t.display();
-  t.turn();
-  t.update();
+  agent.render();
 }
 
 void keyPressed() {
-  if (keyCode == RIGHT) {
-    t.setRotation(0.1);
-  } else if (keyCode == LEFT) {
-    t.setRotation(-0.1);
-  } else if (keyCode == UP) {
-    t.throttle();
-  }
+    if (keyCode == RIGHT) {
+        agent.turn(1);
+    } else if (keyCode == LEFT) {
+        agent.turn(0);
+    } else if (keyCode == UP) {
+        System.out.println("Pressed up");
+        agent.roll();
+    }
 }
 
 void keyReleased() {
-  t.setRotation(0);
+    agent.stop();
 }
