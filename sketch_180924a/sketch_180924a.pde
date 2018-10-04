@@ -8,6 +8,7 @@ Agent agent;
 void setup() {
   size(1000, 1000);
   agent = new Agent();
+  // frameRate(10);
 }
 
 void draw() {
@@ -21,11 +22,12 @@ void keyPressed() {
     } else if (keyCode == LEFT) {
         agent.turn(0);
     } else if (keyCode == UP) {
-        System.out.println("Pressed up");
         agent.roll();
+    } else if (keyCode == DOWN) {
+        agent.halt();
     }
 }
 
 void keyReleased() {
-    agent.stop();
+    //Record wheel to machine heading ratio at end of turn, turn wheels after release to maintain ratio
 }

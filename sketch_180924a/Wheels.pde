@@ -1,54 +1,78 @@
 class Wheels {
-    float angle;
+    float steeringAngle;
+    float drawAngle;
+    float heading;
     PVector pos;
     PVector vel;
+    Agent agent;
     Boolean rolling;
 
+// Constructs Wheel Object
     Wheels() {
-        this.angle = 0;
+        this.steeringAngle = 0;
+        this.drawAngle = 0;
+        this.heading = 0;
         this.pos = new PVector(width/2, height/2);
         this.vel = new PVector(0, 0);
         this.rolling = false;
     }
 
+// Renders Wheel object on canvas
     void show() {
         pushMatrix();
-        stroke(0,0,255);
+        stroke(255,0,0);
         strokeWeight(3);
         translate(this.pos.x, this.pos.y);
-        rotate(PI/2);
+        this.heading = this.agent.machine.angle;
+        rotate(heading + PI/2);
+        maintain();
         showLeft();
         showRight();
         popMatrix();
         if (rolling) {
-            System.out.println(rolling);
             roll();
         }
+        System.out.println("Steering Angle: " + this.agent.degrees(this.steeringAngle));
+        System.out.println("Heading: " + this.agent.degrees(this.heading));
+        System.out.println("Draw Angle: " + this.agent.degrees(this.drawAngle));
+        System.out.println("-------------------------------");
     }
 
     void showLeft() {
         pushMatrix();
-        translate(-5, -10);
-        rotate(this.angle);
+        translate(-5, 0);
+        rotate(this.drawAngle);
         line(0, -3, 0, 3);
         popMatrix();
     }
 
     void showRight() {
         pushMatrix();
-        translate(5, -10);
-        rotate(this.angle);
+        translate(5, 0);
+        rotate(this.drawAngle);
         line(0, -3, 0, 3);
         popMatrix();
     }
 
-    void turn(float a) {
-        this.angle += a;
+    void maintain() {
+        this.drawAngle = this.steeringAngle + this.heading;
+        this.drawAngle -= this.heading;
     }
 
+    void turn(float a) {
+        this.steeringAngle += a;
+    }
+
+
     void roll() {
-        PVector p = PVector.fromAngle(this.angle);
-        this.vel.add(p);
+        PVector p = PVector.fromAngle(this.steeringAngle+this.heading);
+        this.vel = p.div(2);
+        this.pos.add(this.vel);
+    }
+
+// Used to get machine heading
+    void takeAgent(Agent agent) {
+        this.agent = agent;
     }
 
 }

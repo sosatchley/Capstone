@@ -5,10 +5,11 @@ class Agent {
     Cutter cutter;
 
     Agent() {
-        wheels = new Wheels();
-        axle = new Axle();
-        machine = new Machine();
-        cutter = new Cutter();
+        this.wheels = new Wheels();
+        this.machine = new Machine(this.wheels.pos);
+        this.axle = new Axle(this.machine, this.wheels);
+        this.cutter = new Cutter(this.machine.pos);
+        this.wheels.takeAgent(this);
     }
 
     void render() {
@@ -20,29 +21,32 @@ class Agent {
 
     void turn(int dir) {
         if (dir == 1) {
-
-            if ((this.wheels.angle - this.machine.angle) < (degrees(60))) {
+            if (degrees(this.wheels.steeringAngle) < 60) {
                 this.wheels.turn(0.1);
             }
         } else if (dir == 0) {
-            if ((this.wheels.angle - this.machine.angle) > (degrees(-60))) {
+            if (degrees(this.wheels.steeringAngle) > -60) {
                 this.wheels.turn(-0.1);
             }
         }
     }
 
     void roll() {
-        System.out.println("called roll");
         this.wheels.rolling = true;
     }
 
-    void stop() {
+    void halt() {
         this.wheels.rolling = false;
     }
 
-    float degrees(int degrees) {
+    float radians(int degrees) {
         float radians = degrees * PI / 180;
         return radians;
+    }
+
+    double degrees(float radians) {
+        double degrees = radians * 180 / PI;
+        return degrees;
     }
 
 }
