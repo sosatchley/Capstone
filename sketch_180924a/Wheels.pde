@@ -32,10 +32,6 @@ class Wheels {
         if (rolling) {
             roll();
         }
-        System.out.println("Steering Angle: " + this.agent.degrees(this.steeringAngle));
-        System.out.println("Heading: " + this.agent.degrees(this.heading));
-        System.out.println("Draw Angle: " + this.agent.degrees(this.drawAngle));
-        System.out.println("-------------------------------");
     }
 
     void showLeft() {

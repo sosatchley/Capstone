@@ -3,6 +3,8 @@ import processing.data.*;
 import processing.event.*; 
 import processing.opengl.*; 
 
+import controlP5.*; 
+
 import java.util.HashMap; 
 import java.util.ArrayList; 
 import java.io.File; 
@@ -18,18 +20,30 @@ public class sketch_180924a extends PApplet {
 // CSCI 410
 // Auto-Steer Simulation
 
-
 Agent agent;
+HUD hud;
 
 public void setup() {
   
   agent = new Agent();
+  hud = new HUD(this);
   // frameRate(10);
 }
 
 public void draw() {
   background(0);
   agent.render();
+  hud.render();
+  mouseListener();
+}
+
+public void mouseListener() {
+    if (mouseY > 900) {
+        hud.show();
+    }
+    else if (mouseY < 800) {
+        hud.hide();
+    }
 }
 
 public void keyPressed() {
@@ -97,6 +111,8 @@ class Agent {
         double degrees = radians * 180 / PI;
         return degrees;
     }
+
+
 
 }
 class Axle {
@@ -171,7 +187,93 @@ class Cutter {
         this.pos.y = this.follow.y - sin(this.angle) * 16;
     }
 }
+class Field {
+    Boolean complete;
+    PShape shape;
 
+
+    Field() {
+
+    }
+
+    public void beginCircuit() {
+
+    }
+}
+
+class HUD {
+    PApplet sketch;
+    float curHeight;
+    int showHeight;
+    int hideHeight;
+    boolean vis;
+    ControlP5 control;
+    Textlabel viewLabel;
+    Textlabel algLabel;
+    PFont font;
+    Toggle predictToggle;
+    Toggle pathToggle;
+    Toggle followToggle;
+    Button fieldStarter;
+    Slider testSlider;
+
+    HUD(PApplet sketch) {
+
+        this.sketch = sketch;
+        this.showHeight = 200;
+        this.curHeight = height;
+        this.vis = false;
+        this.font = createFont("OpenSansCondensed-Light.ttf", 32);
+
+        control = new ControlP5(sketch);
+        // Labels
+        viewLabel = new Textlabel(control, "View", 100, 10, 150,150);
+        algLabel = new Textlabel(control, "Info", 800, 10, 150,150);
+        viewLabel.setFont(this.font);
+        algLabel.setFont(this.font);
+        // View Buttons
+        predictToggle = new Toggle(control, "Prediction");
+        predictToggle.setSize(50,20);
+        pathToggle = new Toggle(control, "Path");
+        pathToggle.setSize(50, 20);
+        followToggle = new Toggle(control, "Follow");
+        followToggle.setSize(50, 20);
+
+        fieldStarter = new Button(control, "Start Field");
+        fieldStarter.setSize(200, 100);
+        fieldStarter.registerTooltip("START");
+        
+        testSlider = new Slider(control, "Speed");
+        testSlider.setSize(200, 10);
+
+    }
+
+    public void render() {
+        pushMatrix();
+        translate(0, this.curHeight);
+        fill(255, 100);
+        stroke(27, 196, 245);
+        rect(0, 0, width-1, 210, 10);
+        viewLabel.draw(this.sketch);
+        algLabel.draw(this.sketch);
+        predictToggle.setPosition(100,curHeight+50);
+        pathToggle.setPosition(100, curHeight+100);
+        followToggle.setPosition(100, curHeight+150);
+        fieldStarter.setPosition(400, curHeight+50);
+        testSlider.setPosition(400, curHeight);
+        popMatrix();
+    }
+
+    public void show() {
+        this.vis = true;
+        this.curHeight = lerp(this.curHeight, 800, 0.2f);
+    }
+
+    public void hide() {
+        this.vis = false;
+        this.curHeight = lerp(this.curHeight, height+1, 0.1f);
+    }
+}
 class Machine {
       PVector pos;
       PVector follow;
@@ -248,10 +350,6 @@ class Wheels {
         if (rolling) {
             roll();
         }
-        System.out.println("Steering Angle: " + this.agent.degrees(this.steeringAngle));
-        System.out.println("Heading: " + this.agent.degrees(this.heading));
-        System.out.println("Draw Angle: " + this.agent.degrees(this.drawAngle));
-        System.out.println("-------------------------------");
     }
 
     public void showLeft() {
