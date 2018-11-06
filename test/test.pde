@@ -22,15 +22,15 @@ void draw() {
         shape(this.shape);
     }
 }
-void keyPressed() {
-    if (keyCode == UP) {
-        test();
-    }
+void mousePressed() {
+    System.out.println("test");
+    test();
 }
 
 void test() {
     System.out.println("Running Test");
     running = true;
+    noFill();
     this.startx = mouseX;
     this.starty = mouseY;
     rect(this.startx-15, this.starty-15, 30, 30);
@@ -38,7 +38,7 @@ void test() {
     System.out.printf("StartX: %f  StartY: %f \n", this.startx, this.starty);
     this.shape = createShape();
     this.shape.beginShape();
-    this.shape.fill(87, 43, 163);
+    // this.shape.fill(87, 43, 163);
     this.shape.stroke(112, 143, 250);
 
 }
@@ -64,6 +64,7 @@ Boolean fieldComplete(float x, float y) {
         return false;
     }
     if ((x > this.startx-15 && x < this.startx + 15) && (y > this.starty-15 && y < this.starty+15)) {
+        this.shape.fill(87, 43, 163);
         return true;
     }
     return false;
