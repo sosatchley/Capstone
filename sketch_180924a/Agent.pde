@@ -49,6 +49,19 @@ class Agent {
         return degrees;
     }
 
+    Wheels getWheels() {
+        return this.wheels;
+    }
 
+    Axle getAxle() {
+        return this.axle;
+    }
 
+    Machine getMachine() {
+        return this.machine;
+    }
+
+    Cutter getCutter() {
+        return this.cutter;
+    }
 }

@@ -4,12 +4,13 @@
 
 Agent agent;
 HUD hud;
+Field field;
 
 void setup() {
   size(1000, 1000);
   agent = new Agent();
   hud = new HUD(this);
-  // frameRate(10);
+  field = new Field(this);
 }
 
 void draw() {
@@ -17,6 +18,7 @@ void draw() {
   agent.render();
   hud.render();
   mouseListener();
+  field.render();
 }
 
 void mouseListener() {
@@ -42,4 +44,16 @@ void keyPressed() {
 
 void keyReleased() {
     //Record wheel to machine heading ratio at end of turn, turn wheels after release to maintain ratio
+}
+
+getAgent() {
+    return this.agent;
+}
+
+getHUD() {
+    return this.hud;
+}
+
+getField() {
+    return this.field;
 }
