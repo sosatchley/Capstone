@@ -1,0 +1,165 @@
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import controlP5.*; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class sketch_181106a extends PApplet {
+
+
+
+ControlP5 cp5;
+Slider s1, s2;
+Info info;
+CallbackListener cb;
+
+public void setup() {
+  
+
+  cp5 = new ControlP5(this);
+
+
+  // create a new instance of class Info
+  // info will be used to display a controller's information and
+  // will fade in when a CallbackEvent is invoked.
+  info = new Info();
+
+
+  // add 2 sliders
+  s1 = cp5.addSlider("hello")
+          .setRange(0, 100)
+          .setValue(50)
+          .setPosition(40, 40)
+          .setSize(100, 20);
+
+  s2 = cp5.addSlider("world")
+          .setRange(0, 100)
+          .setValue(10)
+          .setPosition(40, 70)
+          .setSize(100, 20);
+
+
+  // the following CallbackListener will listen to any controlP5
+  // action such as enter, leave, pressed, released, releasedoutside, broadcast
+  // see static variables starting with ACTION_ inside class controlP5.ControlP5Constants
+
+  cb = new CallbackListener() {
+    public void controlEvent(CallbackEvent theEvent) {
+      switch(theEvent.getAction()) {
+        case(ControlP5.ACTION_ENTER):
+        info.n = 1;
+        info.label.setText(theEvent.getController().getInfo());
+        cursor(HAND);
+        break;
+        case(ControlP5.ACTION_LEAVE):
+        case(ControlP5.ACTION_RELEASEDOUTSIDE):
+        info.n = 0;
+        cursor(ARROW);
+        break;
+      }
+    }
+  };
+
+  // add the above callback to controlP5
+  cp5.addCallback(cb);
+
+  // add another callback to slider s1, callback event will only be invoked for this
+  // particular controller.
+  s1.addCallback(new CallbackListener() {
+    public void controlEvent(CallbackEvent theEvent) {
+      if (theEvent.getAction()==ControlP5.ACTION_BROADCAST) {
+        s2.setValue(s2.getMax() - s1.getValue());
+      }
+    }
+  }
+  );
+}
+
+public void draw() {
+  background(0);
+  info.update();
+}
+
+
+public void controlEvent(ControlEvent theEvent) {
+  println("Got a ControlEvent for "+theEvent.name()+" = "+theEvent.value());
+  info.label.setText(theEvent.getController().getInfo());
+}
+
+public void keyPressed() {
+  // uncomment the line below to remove callback cb from controlP5
+  // when a key is pressed.
+  //controlP5.removeCallback(cb);
+}
+
+// controlEvent(CallbackEvent) is called whenever a callback
+// has been triggered. controlEvent(CallbackEvent) is detected by
+// controlP5 automatically.
+public void controlEvent(CallbackEvent theEvent) {
+  if (theEvent.getController().equals(s2)) {
+    switch(theEvent.getAction()) {
+      case(ControlP5.ACTION_ENTER):
+      println("Action:ENTER");
+      break;
+      case(ControlP5.ACTION_LEAVE):
+      println("Action:LEAVE");
+      break;
+      case(ControlP5.ACTION_PRESSED):
+      println("Action:PRESSED");
+      break;
+      case(ControlP5.ACTION_RELEASED):
+      println("Action:RELEASED");
+      break;
+      case(ControlP5.ACTION_RELEASEDOUTSIDE):
+      println("Action:RELEASED OUTSIDE");
+      break;
+      case(ControlP5.ACTION_BROADCAST):
+      println("Action:BROADCAST");
+      break;
+    }
+  }
+}
+
+
+
+class Info {
+  float a;
+  float n = 0;
+  String txt = "";
+  Textarea label;
+
+  Info() {
+    label = cp5.addTextarea("Hello\nWorld")
+               .setSize(200,200)
+               .setPosition(300,40)
+               .setColor(color(255))
+               .setColorBackground(color(100,0))
+               .setLineHeight(12);
+
+  }
+
+  public void update() {
+    a += (n-a)*0.1f;
+    label.setColorBackground(color(100,255*a));
+  }
+}
+  public void settings() {  size(800, 400); }
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "sketch_181106a" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}

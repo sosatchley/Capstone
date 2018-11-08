@@ -1,11 +1,13 @@
 import controlP5.*;
 class HUD {
     PApplet sketch;
+    Field field;
     float curHeight;
     int showHeight;
     int hideHeight;
     boolean vis;
     ControlP5 control;
+    CallbackListener cb;
     Textlabel viewLabel;
     Textlabel algLabel;
     PFont font;
@@ -15,8 +17,8 @@ class HUD {
     Button fieldStarter;
     Slider testSlider;
 
-    HUD(PApplet sketch) {
-
+    HUD(PApplet sketch, Field field) {
+        this.field = field;
         this.sketch = sketch;
         this.showHeight = 200;
         this.curHeight = height;
@@ -37,14 +39,14 @@ class HUD {
         followToggle = new Toggle(control, "Follow");
         followToggle.setSize(50, 20);
 
-        fieldStarter = new Button(control, "Start Field");
+        fieldStarter = new Button(control, "Start");
         fieldStarter.setSize(200, 100);
-        fieldStarter.registerTooltip("START");
-        
+
         testSlider = new Slider(control, "Speed");
         testSlider.setSize(200, 10);
-
     }
+
+
 
     void render() {
         pushMatrix();
@@ -71,4 +73,6 @@ class HUD {
         this.vis = false;
         this.curHeight = lerp(this.curHeight, height+1, 0.1);
     }
+
+
 }

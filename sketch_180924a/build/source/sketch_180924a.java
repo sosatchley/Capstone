@@ -3,6 +3,81 @@ import processing.data.*;
 import processing.event.*; 
 import processing.opengl.*; 
 
+import org.apache.commons.math3.ml.neuralnet.*; 
+import org.apache.commons.math3.ml.neuralnet.twod.*; 
+import org.apache.commons.math3.ml.neuralnet.twod.util.*; 
+import org.apache.commons.math3.ml.neuralnet.oned.*; 
+import org.apache.commons.math3.ml.neuralnet.sofm.*; 
+import org.apache.commons.math3.ml.neuralnet.sofm.util.*; 
+import org.apache.commons.math3.ml.clustering.*; 
+import org.apache.commons.math3.ml.clustering.evaluation.*; 
+import org.apache.commons.math3.ml.distance.*; 
+import org.apache.commons.math3.analysis.*; 
+import org.apache.commons.math3.analysis.differentiation.*; 
+import org.apache.commons.math3.analysis.integration.*; 
+import org.apache.commons.math3.analysis.integration.gauss.*; 
+import org.apache.commons.math3.analysis.function.*; 
+import org.apache.commons.math3.analysis.polynomials.*; 
+import org.apache.commons.math3.analysis.solvers.*; 
+import org.apache.commons.math3.analysis.interpolation.*; 
+import org.apache.commons.math3.stat.interval.*; 
+import org.apache.commons.math3.stat.ranking.*; 
+import org.apache.commons.math3.stat.clustering.*; 
+import org.apache.commons.math3.stat.*; 
+import org.apache.commons.math3.stat.inference.*; 
+import org.apache.commons.math3.stat.correlation.*; 
+import org.apache.commons.math3.stat.descriptive.*; 
+import org.apache.commons.math3.stat.descriptive.rank.*; 
+import org.apache.commons.math3.stat.descriptive.summary.*; 
+import org.apache.commons.math3.stat.descriptive.moment.*; 
+import org.apache.commons.math3.stat.regression.*; 
+import org.apache.commons.math3.linear.*; 
+import org.apache.commons.math3.*; 
+import org.apache.commons.math3.distribution.*; 
+import org.apache.commons.math3.distribution.fitting.*; 
+import org.apache.commons.math3.complex.*; 
+import org.apache.commons.math3.ode.*; 
+import org.apache.commons.math3.ode.nonstiff.*; 
+import org.apache.commons.math3.ode.events.*; 
+import org.apache.commons.math3.ode.sampling.*; 
+import org.apache.commons.math3.random.*; 
+import org.apache.commons.math3.primes.*; 
+import org.apache.commons.math3.optim.*; 
+import org.apache.commons.math3.optim.linear.*; 
+import org.apache.commons.math3.optim.nonlinear.vector.*; 
+import org.apache.commons.math3.optim.nonlinear.vector.jacobian.*; 
+import org.apache.commons.math3.optim.nonlinear.scalar.*; 
+import org.apache.commons.math3.optim.nonlinear.scalar.gradient.*; 
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.*; 
+import org.apache.commons.math3.optim.univariate.*; 
+import org.apache.commons.math3.exception.*; 
+import org.apache.commons.math3.exception.util.*; 
+import org.apache.commons.math3.fitting.leastsquares.*; 
+import org.apache.commons.math3.fitting.*; 
+import org.apache.commons.math3.dfp.*; 
+import org.apache.commons.math3.fraction.*; 
+import org.apache.commons.math3.special.*; 
+import org.apache.commons.math3.geometry.*; 
+import org.apache.commons.math3.geometry.hull.*; 
+import org.apache.commons.math3.geometry.enclosing.*; 
+import org.apache.commons.math3.geometry.spherical.twod.*; 
+import org.apache.commons.math3.geometry.spherical.oned.*; 
+import org.apache.commons.math3.geometry.euclidean.threed.*; 
+import org.apache.commons.math3.geometry.euclidean.twod.*; 
+import org.apache.commons.math3.geometry.euclidean.twod.hull.*; 
+import org.apache.commons.math3.geometry.euclidean.oned.*; 
+import org.apache.commons.math3.geometry.partitioning.*; 
+import org.apache.commons.math3.geometry.partitioning.utilities.*; 
+import org.apache.commons.math3.optimization.*; 
+import org.apache.commons.math3.optimization.linear.*; 
+import org.apache.commons.math3.optimization.direct.*; 
+import org.apache.commons.math3.optimization.fitting.*; 
+import org.apache.commons.math3.optimization.univariate.*; 
+import org.apache.commons.math3.optimization.general.*; 
+import org.apache.commons.math3.util.*; 
+import org.apache.commons.math3.genetics.*; 
+import org.apache.commons.math3.transform.*; 
+import org.apache.commons.math3.filter.*; 
 import controlP5.*; 
 
 import java.util.HashMap; 
@@ -20,20 +95,24 @@ public class sketch_180924a extends PApplet {
 // CSCI 410
 // Auto-Steer Simulation
 
-Agent agent;
+public Agent agent;
 HUD hud;
+Field field;
 
 public void setup() {
   
   agent = new Agent();
-  hud = new HUD(this);
-  // frameRate(10);
+  field = new Field(agent);
+  hud = new HUD(this, field);
 }
 
 public void draw() {
   background(0);
   agent.render();
   hud.render();
+  if (field.begun) {
+      field.render();
+  }
   mouseListener();
 }
 
@@ -55,11 +134,17 @@ public void keyPressed() {
         agent.roll();
     } else if (keyCode == DOWN) {
         agent.halt();
+    } else if (key == ' ') {
+        field.startField();
     }
 }
 
 public void keyReleased() {
     //Record wheel to machine heading ratio at end of turn, turn wheels after release to maintain ratio
+}
+
+public void test() {
+    System.out.println("test");
 }
 class Agent {
     Wheels wheels;
@@ -112,8 +197,21 @@ class Agent {
         return degrees;
     }
 
+    public Wheels getWheels() {
+        return this.wheels;
+    }
 
+    public Axle getAxle() {
+        return this.axle;
+    }
 
+    public Machine getMachine() {
+        return this.machine;
+    }
+
+    public Cutter getCutter() {
+        return this.cutter;
+    }
 }
 class Axle {
     float angle;
@@ -187,27 +285,158 @@ class Cutter {
         this.pos.y = this.follow.y - sin(this.angle) * 16;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Field {
-    Boolean complete;
+    Boolean drawing;
+    Boolean begun;
     PShape shape;
+    PShape start;
+    float startx;
+    float starty;
+    int v;
+    Agent agent;
 
 
-    Field() {
-
+    Field(Agent agent) {
+        this.agent = agent;
+        this.v = 0;
+        this.begun = false;
     }
 
-    public void beginCircuit() {
+    public void startField() {
+        this.startx = this.agent.getAxle().pos.x;
+        this.starty = this.agent.getAxle().pos.y;
+        stroke(255, 0, 0);
+        noFill();
+        this.start = createShape(RECT, this.startx-15,this.starty-15, 30, 30);
+        this.shape = createShape();
+        this.shape.beginShape();
+        this.shape.stroke(112, 143, 250);
+        this.drawing = true;
+        this.begun = true;
+    }
 
+    public void render() {
+        if (this.drawing) {
+            shape(this.start);
+            float x = this.agent.getAxle().pos.x;
+            float y = this.agent.getAxle().pos.y;
+            updateShape(x, y);
+        }
+        if (this.shape != null) {
+            shape(this.shape);
+        }
+    }
+
+    public void updateShape(float x, float y) {
+        if (!complete(x, y)) {
+            this.shape.vertex(x, y);
+            this.v++;
+            println(this.v);
+            point(x,y);
+        }
+    }
+
+    public Boolean complete(float x, float y) {
+        if (this.v < 200) {
+            return false;
+        }
+        if (( x > this.startx-15 && x < this.startx + 15) && (y > this.starty-15 && y < this.starty + 15)) {
+            this.drawing = false;
+            this.shape.fill(87, 43, 163);
+            this.shape.endShape(CLOSE);
+            this.v = 0;
+            // this.start.setVisable(false);
+            return true;
+        }
+        return false;
     }
 }
 
 class HUD {
     PApplet sketch;
+    Field field;
     float curHeight;
     int showHeight;
     int hideHeight;
     boolean vis;
     ControlP5 control;
+    CallbackListener cb;
     Textlabel viewLabel;
     Textlabel algLabel;
     PFont font;
@@ -217,8 +446,8 @@ class HUD {
     Button fieldStarter;
     Slider testSlider;
 
-    HUD(PApplet sketch) {
-
+    HUD(PApplet sketch, Field field) {
+        this.field = field;
         this.sketch = sketch;
         this.showHeight = 200;
         this.curHeight = height;
@@ -239,14 +468,14 @@ class HUD {
         followToggle = new Toggle(control, "Follow");
         followToggle.setSize(50, 20);
 
-        fieldStarter = new Button(control, "Start Field");
+        fieldStarter = new Button(control, "Start");
         fieldStarter.setSize(200, 100);
-        fieldStarter.registerTooltip("START");
-        
+
         testSlider = new Slider(control, "Speed");
         testSlider.setSize(200, 10);
-
     }
+
+
 
     public void render() {
         pushMatrix();
@@ -273,6 +502,8 @@ class HUD {
         this.vis = false;
         this.curHeight = lerp(this.curHeight, height+1, 0.1f);
     }
+
+
 }
 class Machine {
       PVector pos;

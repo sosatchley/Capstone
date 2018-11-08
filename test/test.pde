@@ -39,7 +39,7 @@ void test() {
 
 }
 
-void (float x, float y) {
+void updateShape(float x, float y) {
     if (!fieldComplete(x, y)) {
         this.shape.vertex(x,y);
         this.v++;
@@ -56,7 +56,7 @@ Boolean fieldComplete(float x, float y) {
         this.running = false;
         this.shape.fill(87, 43, 163);
         this.shape.endShape(CLOSE);
-        return true;
+
     }
     return false;
 

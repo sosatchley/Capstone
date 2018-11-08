@@ -53,7 +53,7 @@ class Agent {
         return this.wheels;
     }
 
-    Axle getAxle() {
+    public Axle getAxle() {
         return this.axle;
     }
 
