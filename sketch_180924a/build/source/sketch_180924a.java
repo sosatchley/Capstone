@@ -25,47 +25,42 @@ public class sketch_180924a extends PApplet {
 public Agent agent;
 HUD hud;
 Field field;
+int state;
 float bx;
 float by;
 float xOffset = 0.0f;
 float yOffset = 0.0f;
-boolean center = false;
+boolean predict = false;
+boolean path = false;
+boolean reset = false;
+boolean follow = false;
+boolean pan = false;
 ControlP5 control;
 
 public void setup() {
-  // size(1000, 1000);
-  control = new ControlP5(this);
   
+  // fullScreen();
+  control = new ControlP5(this);
   bx = 0;
   by = 0;
   agent = new Agent();
   field = new Field(agent);
   hud = new HUD(this, control, field);
+  state = 0;
 }
 
 public void draw() {
-  background(0);
-  // drawGrid(100);
-  if (hud.predictToggle.getState()) {
-      println("Toggle!");
-  }
-  pushMatrix();
-  if (field.drawing) {
-      follow();
-  }
-  if (field.begun && !field.drawing) {
-      center();
-  }
-  if (center) {
-      center();
-  }
-  if (field.begun) {
-      field.render();
-  }
-  agent.render();
-  popMatrix();
-  hud.render();
-  mouseListener();
+    mouseListener();
+    hudListener();
+    background(0);
+    pushMatrix();
+    stateListener();
+    if (field.begun) {
+        field.render();
+    }
+    agent.render();
+    popMatrix();
+    hud.render();
 }
 
 public void mouseListener() {
@@ -83,41 +78,117 @@ public void mousePressed() {
 }
 
 public void mouseDragged() {
+    pan = true;
+    reset = false;
+    hud.followToggle.setValue(false);
     bx = mouseX-xOffset;
     by = mouseY-yOffset;
 }
 
-public void follow() {
-    PVector pos = agent.wheels.pos;
-    translate((width/2)-pos.x, (height/2)-pos.y);
+public void hudListener() {
+    if (hud.predictToggle.getState()) {
+        predict = true;
+    } else {
+        predict = false;
+    }
+    if (hud.pathToggle.getState()) {
+        path = true;
+    } else {
+        path = false;
+    }
+    if (hud.followToggle.getState()) {
+        follow = true;
+        pan = false;
+        reset = false;
+    } else {
+        follow = false;
+    }
+    if (hud.fieldStarter.isPressed()) {
+        field.startField(hud);
+    }
+
+    if (hud.resetView.isPressed()) {
+        hud.followToggle.setValue(false);
+        pan = false;
+        reset = true;
+    }
 }
 
-public void center() {
-    PVector center = new PVector((field.maxX.x+field.minX.x)/2, (field.maxY.y+field.minY.y)/2);
-    float fieldWidth = field.maxX.x - field.minX.x;
-    float fieldHeight = field.maxY.y - field.minY.y;
-    float min;
-    float scale;
-    float yScale = height/fieldHeight;
-    float xScale = width/fieldWidth;
-    if (yScale>xScale) {
-        scale = xScale;
-    } else {
-        scale = yScale;
+public void stateListener() {
+    if (!field.begun) {
+        state = 0;
+    } else if (field.drawing) {
+        state = 1;
+    } else if (field.complete) {
+        state = 2;
     }
-    println("Min X: " + field.minX.x);
-    println("Min Y: " + field.minY.y);
-    println("Max X: " + field.maxX.x);
-    println("Max Y: " + field.maxY.y);
-    println("Center: " + coord(center));
-    println(fieldWidth + " pixels by " + fieldHeight);
-    translate((width/2)-center.x, (height/2)-center.y);
-    strokeWeight(10);
-    stroke(255,0,0);
-    translate(center.x, center.y);
-    scale(scale-(scale/10));
-    translate(-center.x, -center.y);
-    point(center.x, center.y);
+    switch(state) {
+        case(0) :
+            if (pan) {
+                translate(bx, by);
+            } else if (follow) {
+                follow();
+            } else {
+                bx = 0;
+                by = 0;
+                translate(bx, by);
+            }
+            break;
+        case(1) :
+            hud.followToggle.setValue(true);
+            hud.followToggle.setLock(true);
+            hud.resetView.setLock(true);
+            follow = true;
+            follow();
+            break;
+        case(2) :
+            if (follow) {
+                follow();
+                pan = false;
+                reset = false;
+            } else if (pan) {
+                translate(bx, by);
+            } else {
+                reset = true;
+                reset();
+            }
+        }
+}
+
+public void follow() {
+    PVector pos = agent.wheels.pos;
+    bx = (width/2)-pos.x;
+    by = (width/2)-pos.y;
+    translate(bx, by);
+}
+
+public void reset() {
+    if (!field.begun) {
+        bx = 0;
+        by = 0;
+        translate(bx, by);
+    } else {
+        PVector center = new PVector((field.maxX.x+field.minX.x)/2, (field.maxY.y+field.minY.y)/2);
+        float fieldWidth = field.maxX.x - field.minX.x;
+        float fieldHeight = field.maxY.y - field.minY.y;
+        float min;
+        float scale;
+        float yScale = height/fieldHeight;
+        float xScale = width/fieldWidth;
+        if (yScale>xScale) {
+            scale = xScale;
+        } else {
+            scale = yScale;
+        }
+        bx = (width/2)-center.x;
+        by = (height/2  )-center.y;
+        translate(bx, by);
+        strokeWeight(10);
+        stroke(255,0,0);
+        translate(center.x, center.y);
+        scale(scale-(scale/10));
+        translate(-center.x, -center.y);
+    }
 }
 
 public void keyPressed() {
@@ -130,12 +201,12 @@ public void keyPressed() {
     } else if (keyCode == DOWN) {
         agent.halt();
     } else if (key == ' ') {
-        field.startField();
+        field.startField(hud);
     } else if (key == 'c') {
-        if (!center) {
-            center = true;
+        if (!reset) {
+            reset = true;
         } else {
-            center = false;
+            reset = false;
         }
     }
 }
@@ -290,8 +361,10 @@ class Cutter {
 }
 
 class Field {
-    Boolean drawing;
+    HUD hud;
     Boolean begun;
+    Boolean drawing;
+    Boolean complete;
     PShape shape;
     PShape start;
     float startx;
@@ -310,9 +383,12 @@ class Field {
         this.v = 0;
         this.begun = false;
         this.drawing = false;
+        this.complete = false;
     }
 
-    public void startField() {
+    public void startField(HUD hud) {
+        this.hud = hud;
+        this.hud.fieldStarter.setOn();
         this.startx = this.agent.getAxle().pos.x;
         this.starty = this.agent.getAxle().pos.y;
         this.minX = null;
@@ -379,7 +455,15 @@ class Field {
                 }
             }
             this.drawing = false;
+            this.complete = true;
+            this.hud.fieldStarter.setOff();
+            this.hud.resetView.mousePressed();
+            this.hud.resetView.mouseReleased();
+            this.hud.followToggle.setLock(false);
+            this.hud.followToggle.setValue(false);
+            this.hud.resetView.setLock(false);
             this.v = 0;
+            println("just 1");
             // this.start.setVisable(false);
             return true;
         }
@@ -404,6 +488,7 @@ class HUD {
     Toggle followToggle;
     boolean Prediction;
     Button fieldStarter;
+    Button resetView;
     Slider testSlider;
 
     HUD(PApplet sketch, ControlP5 control, Field field) {
@@ -411,11 +496,13 @@ class HUD {
         this.control = control;
         this.showHeight = 200;
         this.curHeight = height;
+        this.field = field;
+
         this.vis = false;
         this.font = createFont("OpenSansCondensed-Light.ttf", 32);
         // Labels
-        viewLabel = new Textlabel(control, "View", 100, 10, 150,150);
-        algLabel = new Textlabel(control, "Info", 800, 10, 150,150);
+        viewLabel = new Textlabel(control, "View", width/10, 10, 150,150);
+        algLabel = new Textlabel(control, "Info", width/10*8, 10, 150,150);
         viewLabel.setFont(this.font);
         algLabel.setFont(this.font);
         // View Buttons
@@ -426,9 +513,13 @@ class HUD {
         pathToggle.setSize(50, 20);
         followToggle = new Toggle(control, "Follow");
         followToggle.setSize(50, 20);
+        resetView = new Button(control, "reset");
+        resetView.setSize(50, 20);
 
         fieldStarter = new Button(control, "Start");
         fieldStarter.setSize(200, 100);
+        fieldStarter.setSwitch(true);
+        fieldStarter.setOff();
 
         testSlider = new Slider(control, "Speed");
         testSlider.setSize(200, 10);
@@ -444,20 +535,21 @@ class HUD {
             fill(255,0,0);
         }
         stroke(27, 196, 245);
-        rect(0, 0, width-1, 210, 10);
+        rect(0, 0, width-1, height/5+10, 10);
         viewLabel.draw(this.sketch);
         algLabel.draw(this.sketch);
-        predictToggle.setPosition(100,curHeight+50);
-        pathToggle.setPosition(100, curHeight+100);
-        followToggle.setPosition(100, curHeight+150);
-        fieldStarter.setPosition(400, curHeight+50);
-        testSlider.setPosition(400, curHeight);
+        predictToggle.setPosition(width/20,curHeight+50);
+        pathToggle.setPosition(width/20, curHeight+100);
+        followToggle.setPosition(width/20, curHeight+150);
+        resetView.setPosition(width/20 + width/10, curHeight + 100);
+        fieldStarter.setPosition(width/2-100, curHeight+50);
+        testSlider.setPosition(width/2-100, curHeight);
         popMatrix();
     }
 
     public void show() {
         this.vis = true;
-        this.curHeight = lerp(this.curHeight, 800, 0.2f);
+        this.curHeight = lerp(this.curHeight, height/5*4, 0.2f);
     }
 
     public void hide() {
@@ -610,7 +702,7 @@ class Wheels {
             }
         }
     }
-  public void settings() {  fullScreen(); }
+  public void settings() {  size(1000, 1000); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "sketch_180924a" };
     if (passedArgs != null) {

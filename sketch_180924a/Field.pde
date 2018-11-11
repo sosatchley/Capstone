@@ -1,7 +1,9 @@
 
 class Field {
-    Boolean drawing;
+    HUD hud;
     Boolean begun;
+    Boolean drawing;
+    Boolean complete;
     PShape shape;
     PShape start;
     float startx;
@@ -20,9 +22,12 @@ class Field {
         this.v = 0;
         this.begun = false;
         this.drawing = false;
+        this.complete = false;
     }
 
-    void startField() {
+    void startField(HUD hud) {
+        this.hud = hud;
+        this.hud.fieldStarter.setOn();
         this.startx = this.agent.getAxle().pos.x;
         this.starty = this.agent.getAxle().pos.y;
         this.minX = null;
@@ -89,7 +94,15 @@ class Field {
                 }
             }
             this.drawing = false;
+            this.complete = true;
+            this.hud.fieldStarter.setOff();
+            this.hud.resetView.mousePressed();
+            this.hud.resetView.mouseReleased();
+            this.hud.followToggle.setLock(false);
+            this.hud.followToggle.setValue(false);
+            this.hud.resetView.setLock(false);
             this.v = 0;
+            println("just 1");
             // this.start.setVisable(false);
             return true;
         }
