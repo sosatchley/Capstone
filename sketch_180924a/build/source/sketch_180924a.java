@@ -3,81 +3,7 @@ import processing.data.*;
 import processing.event.*; 
 import processing.opengl.*; 
 
-import org.apache.commons.math3.ml.neuralnet.*; 
-import org.apache.commons.math3.ml.neuralnet.twod.*; 
-import org.apache.commons.math3.ml.neuralnet.twod.util.*; 
-import org.apache.commons.math3.ml.neuralnet.oned.*; 
-import org.apache.commons.math3.ml.neuralnet.sofm.*; 
-import org.apache.commons.math3.ml.neuralnet.sofm.util.*; 
-import org.apache.commons.math3.ml.clustering.*; 
-import org.apache.commons.math3.ml.clustering.evaluation.*; 
-import org.apache.commons.math3.ml.distance.*; 
-import org.apache.commons.math3.analysis.*; 
-import org.apache.commons.math3.analysis.differentiation.*; 
-import org.apache.commons.math3.analysis.integration.*; 
-import org.apache.commons.math3.analysis.integration.gauss.*; 
-import org.apache.commons.math3.analysis.function.*; 
-import org.apache.commons.math3.analysis.polynomials.*; 
-import org.apache.commons.math3.analysis.solvers.*; 
-import org.apache.commons.math3.analysis.interpolation.*; 
-import org.apache.commons.math3.stat.interval.*; 
-import org.apache.commons.math3.stat.ranking.*; 
-import org.apache.commons.math3.stat.clustering.*; 
-import org.apache.commons.math3.stat.*; 
-import org.apache.commons.math3.stat.inference.*; 
-import org.apache.commons.math3.stat.correlation.*; 
-import org.apache.commons.math3.stat.descriptive.*; 
-import org.apache.commons.math3.stat.descriptive.rank.*; 
-import org.apache.commons.math3.stat.descriptive.summary.*; 
-import org.apache.commons.math3.stat.descriptive.moment.*; 
-import org.apache.commons.math3.stat.regression.*; 
-import org.apache.commons.math3.linear.*; 
-import org.apache.commons.math3.*; 
-import org.apache.commons.math3.distribution.*; 
-import org.apache.commons.math3.distribution.fitting.*; 
-import org.apache.commons.math3.complex.*; 
-import org.apache.commons.math3.ode.*; 
-import org.apache.commons.math3.ode.nonstiff.*; 
-import org.apache.commons.math3.ode.events.*; 
-import org.apache.commons.math3.ode.sampling.*; 
-import org.apache.commons.math3.random.*; 
-import org.apache.commons.math3.primes.*; 
-import org.apache.commons.math3.optim.*; 
-import org.apache.commons.math3.optim.linear.*; 
-import org.apache.commons.math3.optim.nonlinear.vector.*; 
-import org.apache.commons.math3.optim.nonlinear.vector.jacobian.*; 
-import org.apache.commons.math3.optim.nonlinear.scalar.*; 
-import org.apache.commons.math3.optim.nonlinear.scalar.gradient.*; 
-import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.*; 
-import org.apache.commons.math3.optim.univariate.*; 
-import org.apache.commons.math3.exception.*; 
-import org.apache.commons.math3.exception.util.*; 
-import org.apache.commons.math3.fitting.leastsquares.*; 
-import org.apache.commons.math3.fitting.*; 
-import org.apache.commons.math3.dfp.*; 
-import org.apache.commons.math3.fraction.*; 
-import org.apache.commons.math3.special.*; 
-import org.apache.commons.math3.geometry.*; 
-import org.apache.commons.math3.geometry.hull.*; 
-import org.apache.commons.math3.geometry.enclosing.*; 
-import org.apache.commons.math3.geometry.spherical.twod.*; 
-import org.apache.commons.math3.geometry.spherical.oned.*; 
-import org.apache.commons.math3.geometry.euclidean.threed.*; 
-import org.apache.commons.math3.geometry.euclidean.twod.*; 
-import org.apache.commons.math3.geometry.euclidean.twod.hull.*; 
-import org.apache.commons.math3.geometry.euclidean.oned.*; 
-import org.apache.commons.math3.geometry.partitioning.*; 
-import org.apache.commons.math3.geometry.partitioning.utilities.*; 
-import org.apache.commons.math3.optimization.*; 
-import org.apache.commons.math3.optimization.linear.*; 
-import org.apache.commons.math3.optimization.direct.*; 
-import org.apache.commons.math3.optimization.fitting.*; 
-import org.apache.commons.math3.optimization.univariate.*; 
-import org.apache.commons.math3.optimization.general.*; 
-import org.apache.commons.math3.util.*; 
-import org.apache.commons.math3.genetics.*; 
-import org.apache.commons.math3.transform.*; 
-import org.apache.commons.math3.filter.*; 
+import controlP5.*; 
 import controlP5.*; 
 
 import java.util.HashMap; 
@@ -95,24 +21,50 @@ public class sketch_180924a extends PApplet {
 // CSCI 410
 // Auto-Steer Simulation
 
+
 public Agent agent;
 HUD hud;
 Field field;
+float bx;
+float by;
+float xOffset = 0.0f;
+float yOffset = 0.0f;
+boolean center = false;
+ControlP5 control;
 
 public void setup() {
+  // size(1000, 1000);
+  control = new ControlP5(this);
   
+  bx = 0;
+  by = 0;
   agent = new Agent();
   field = new Field(agent);
-  hud = new HUD(this, field);
+  hud = new HUD(this, control, field);
 }
 
 public void draw() {
   background(0);
-  agent.render();
-  hud.render();
+  // drawGrid(100);
+  if (hud.predictToggle.getState()) {
+      println("Toggle!");
+  }
+  pushMatrix();
+  if (field.drawing) {
+      follow();
+  }
+  if (field.begun && !field.drawing) {
+      center();
+  }
+  if (center) {
+      center();
+  }
   if (field.begun) {
       field.render();
   }
+  agent.render();
+  popMatrix();
+  hud.render();
   mouseListener();
 }
 
@@ -123,6 +75,49 @@ public void mouseListener() {
     else if (mouseY < 800) {
         hud.hide();
     }
+}
+
+public void mousePressed() {
+  xOffset = mouseX-bx;
+  yOffset = mouseY-by;
+}
+
+public void mouseDragged() {
+    bx = mouseX-xOffset;
+    by = mouseY-yOffset;
+}
+
+public void follow() {
+    PVector pos = agent.wheels.pos;
+    translate((width/2)-pos.x, (height/2)-pos.y);
+}
+
+public void center() {
+    PVector center = new PVector((field.maxX.x+field.minX.x)/2, (field.maxY.y+field.minY.y)/2);
+    float fieldWidth = field.maxX.x - field.minX.x;
+    float fieldHeight = field.maxY.y - field.minY.y;
+    float min;
+    float scale;
+    float yScale = height/fieldHeight;
+    float xScale = width/fieldWidth;
+    if (yScale>xScale) {
+        scale = xScale;
+    } else {
+        scale = yScale;
+    }
+    println("Min X: " + field.minX.x);
+    println("Min Y: " + field.minY.y);
+    println("Max X: " + field.maxX.x);
+    println("Max Y: " + field.maxY.y);
+    println("Center: " + coord(center));
+    println(fieldWidth + " pixels by " + fieldHeight);
+    translate((width/2)-center.x, (height/2)-center.y);
+    strokeWeight(10);
+    stroke(255,0,0);
+    translate(center.x, center.y);
+    scale(scale-(scale/10));
+    translate(-center.x, -center.y);
+    point(center.x, center.y);
 }
 
 public void keyPressed() {
@@ -136,6 +131,12 @@ public void keyPressed() {
         agent.halt();
     } else if (key == ' ') {
         field.startField();
+    } else if (key == 'c') {
+        if (!center) {
+            center = true;
+        } else {
+            center = false;
+        }
     }
 }
 
@@ -151,6 +152,7 @@ class Agent {
     Axle axle;
     Machine machine;
     Cutter cutter;
+    PVector pos;
 
     Agent() {
         this.wheels = new Wheels();
@@ -158,6 +160,7 @@ class Agent {
         this.axle = new Axle(this.machine, this.wheels);
         this.cutter = new Cutter(this.machine.pos);
         this.wheels.takeAgent(this);
+        this.pos = this.machine.pos;
     }
 
     public void render() {
@@ -286,81 +289,6 @@ class Cutter {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class Field {
     Boolean drawing;
     Boolean begun;
@@ -368,19 +296,29 @@ class Field {
     PShape start;
     float startx;
     float starty;
+    PVector minX;
+    PVector maxX;
+    PVector minY;
+    PVector maxY;
     int v;
     Agent agent;
+    // Util u = new Util();
 
 
     Field(Agent agent) {
         this.agent = agent;
         this.v = 0;
         this.begun = false;
+        this.drawing = false;
     }
 
     public void startField() {
         this.startx = this.agent.getAxle().pos.x;
         this.starty = this.agent.getAxle().pos.y;
+        this.minX = null;
+        this.maxX = null;
+        this.minY = null;
+        this.maxY = null;
         stroke(255, 0, 0);
         noFill();
         this.start = createShape(RECT, this.startx-15,this.starty-15, 30, 30);
@@ -393,10 +331,14 @@ class Field {
 
     public void render() {
         if (this.drawing) {
+            // pushMatrix();
             shape(this.start);
             float x = this.agent.getAxle().pos.x;
             float y = this.agent.getAxle().pos.y;
+            // scale(2);
+            // translate(x, y);
             updateShape(x, y);
+            // popMatrix();
         }
         if (this.shape != null) {
             shape(this.shape);
@@ -404,10 +346,12 @@ class Field {
     }
 
     public void updateShape(float x, float y) {
+        // FIXME: Something about where edge of field is drawn in relation to first pass
+        //              Left Wheel? Draw field remaining after first pass?
+        //              Right Wheel? Draw entire field, begin showing coverage during first pass?
         if (!complete(x, y)) {
             this.shape.vertex(x, y);
             this.v++;
-            println(this.v);
             point(x,y);
         }
     }
@@ -417,9 +361,24 @@ class Field {
             return false;
         }
         if (( x > this.startx-15 && x < this.startx + 15) && (y > this.starty-15 && y < this.starty + 15)) {
-            this.drawing = false;
-            this.shape.fill(87, 43, 163);
+            this.shape.fill(87, 43, 163, 50);
             this.shape.endShape(CLOSE);
+            for (int i = 0; i < this.shape.getVertexCount()-1; i++) {
+                PVector vertex = this.shape.getVertex(i);
+                if (this.minX == null || this.minX.x > vertex.x) {
+                    this.minX = vertex;
+                }
+                if (this.maxX == null || this.maxX.x < vertex.x) {
+                    this.maxX = vertex;
+                }
+                if (this.minY == null || this.minY.y > vertex.y) {
+                    this.minY = vertex;
+                }
+                if (this.maxY == null || this.maxY.y < vertex.y) {
+                    this.maxY = vertex;
+                }
+            }
+            this.drawing = false;
             this.v = 0;
             // this.start.setVisable(false);
             return true;
@@ -430,12 +389,12 @@ class Field {
 
 class HUD {
     PApplet sketch;
+    ControlP5 control;
     Field field;
     float curHeight;
     int showHeight;
     int hideHeight;
     boolean vis;
-    ControlP5 control;
     CallbackListener cb;
     Textlabel viewLabel;
     Textlabel algLabel;
@@ -443,24 +402,24 @@ class HUD {
     Toggle predictToggle;
     Toggle pathToggle;
     Toggle followToggle;
+    boolean Prediction;
     Button fieldStarter;
     Slider testSlider;
 
-    HUD(PApplet sketch, Field field) {
-        this.field = field;
+    HUD(PApplet sketch, ControlP5 control, Field field) {
         this.sketch = sketch;
+        this.control = control;
         this.showHeight = 200;
         this.curHeight = height;
         this.vis = false;
         this.font = createFont("OpenSansCondensed-Light.ttf", 32);
-
-        control = new ControlP5(sketch);
         // Labels
         viewLabel = new Textlabel(control, "View", 100, 10, 150,150);
         algLabel = new Textlabel(control, "Info", 800, 10, 150,150);
         viewLabel.setFont(this.font);
         algLabel.setFont(this.font);
         // View Buttons
+        Prediction = false;
         predictToggle = new Toggle(control, "Prediction");
         predictToggle.setSize(50,20);
         pathToggle = new Toggle(control, "Path");
@@ -481,6 +440,9 @@ class HUD {
         pushMatrix();
         translate(0, this.curHeight);
         fill(255, 100);
+        if (this.Prediction) {
+            fill(255,0,0);
+        }
         stroke(27, 196, 245);
         rect(0, 0, width-1, 210, 10);
         viewLabel.draw(this.sketch);
@@ -611,7 +573,7 @@ class Wheels {
 
     public void roll() {
         PVector p = PVector.fromAngle(this.steeringAngle+this.heading);
-        this.vel = p.div(2);
+        this.vel = p.mult(2);
         this.pos.add(this.vel);
     }
 
@@ -621,7 +583,34 @@ class Wheels {
     }
 
 }
-  public void settings() {  size(1000, 1000); }
+// class Util() {
+//
+//     Util() {}
+
+    public String coord(float x, float y) {
+        String coord = "(" + x + ":" + y + ")";
+        return coord;
+    }
+
+    public String coord(PVector vector) {
+        float x = vector.x;
+        float y = vector.y;
+        String coord = "(" + x + ":" + y + ")";
+        return coord;
+    }
+
+    public void drawGrid(int cellSize) {
+        PFont font = createFont("Georgia", 8);
+        textFont(font);
+        for (float y = 0; y < height; y+=cellSize) {
+            for (float x = 0; x < width; x+=cellSize) {
+                line(x,y, x, y+cellSize);
+                line(x,y, x+cellSize, y);
+                text(coord(x, y), x+1, y+1);
+            }
+        }
+    }
+  public void settings() {  fullScreen(); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "sketch_180924a" };
     if (passedArgs != null) {

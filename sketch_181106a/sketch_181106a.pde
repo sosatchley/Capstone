@@ -1,137 +1,75 @@
+
+/**
+* ControlP5 Toggle
+*
+*
+* find a list of public methods available for the Toggle Controller
+* at the bottom of this sketch.
+*
+* by Andreas Schlegel, 2011
+* www.sojamo.de/libraries/controlp5
+*
+*/
+
+
 import controlP5.*;
 
 ControlP5 cp5;
-Slider s1, s2;
-Info info;
-CallbackListener cb;
+
+int col = color(255);
+
+boolean toggleValue = false;
 
 void setup() {
-  size(800, 400);
-
+  size(400,400);
+  smooth();
   cp5 = new ControlP5(this);
 
+  // create a toggle
+  cp5.addToggle("toggleValue")
+     .setPosition(40,100)
+     .setSize(50,20)
+     ;
 
-  // create a new instance of class Info
-  // info will be used to display a controller's information and
-  // will fade in when a CallbackEvent is invoked.
-  info = new Info();
+  // create a toggle and change the default look to a (on/off) switch look
+  cp5.addToggle("toggle")
+     .setPosition(40,250)
+     .setSize(50,20)
+     .setValue(true)
+     .setMode(ControlP5.SWITCH)
+     ;
 
-
-  // add 2 sliders
-  s1 = cp5.addSlider("hello")
-          .setRange(0, 100)
-          .setValue(50)
-          .setPosition(40, 40)
-          .setSize(100, 20);
-
-  s2 = cp5.addSlider("world")
-          .setRange(0, 100)
-          .setValue(10)
-          .setPosition(40, 70)
-          .setSize(100, 20);
-
-
-  // the following CallbackListener will listen to any controlP5
-  // action such as enter, leave, pressed, released, releasedoutside, broadcast
-  // see static variables starting with ACTION_ inside class controlP5.ControlP5Constants
-
-  cb = new CallbackListener() {
-    public void controlEvent(CallbackEvent theEvent) {
-      switch(theEvent.getAction()) {
-        case(ControlP5.ACTION_ENTER):
-        info.n = 1;
-        info.label.setText(theEvent.getController().getInfo());
-        cursor(HAND);
-        break;
-        case(ControlP5.ACTION_LEAVE):
-        case(ControlP5.ACTION_RELEASEDOUTSIDE):
-        info.n = 0;
-        cursor(ARROW);
-        break;
-      }
-    }
-  };
-
-  // add the above callback to controlP5
-  cp5.addCallback(cb);
-
-  // add another callback to slider s1, callback event will only be invoked for this
-  // particular controller.
-  s1.addCallback(new CallbackListener() {
-    public void controlEvent(CallbackEvent theEvent) {
-      if (theEvent.getAction()==ControlP5.ACTION_BROADCAST) {
-        s2.setValue(s2.getMax() - s1.getValue());
-      }
-    }
-  }
-  );
 }
+
 
 void draw() {
   background(0);
-  info.update();
-}
 
+  pushMatrix();
 
-void controlEvent(ControlEvent theEvent) {
-  println("Got a ControlEvent for "+theEvent.name()+" = "+theEvent.value());
-  info.label.setText(theEvent.getController().getInfo());
-}
-
-void keyPressed() {
-  // uncomment the line below to remove callback cb from controlP5
-  // when a key is pressed.
-  //controlP5.removeCallback(cb);
-}
-
-// controlEvent(CallbackEvent) is called whenever a callback
-// has been triggered. controlEvent(CallbackEvent) is detected by
-// controlP5 automatically.
-void controlEvent(CallbackEvent theEvent) {
-  if (theEvent.getController().equals(s2)) {
-    switch(theEvent.getAction()) {
-      case(ControlP5.ACTION_ENTER):
-      println("Action:ENTER");
-      break;
-      case(ControlP5.ACTION_LEAVE):
-      println("Action:LEAVE");
-      break;
-      case(ControlP5.ACTION_PRESSED):
-      println("Action:PRESSED");
-      break;
-      case(ControlP5.ACTION_RELEASED):
-      println("Action:RELEASED");
-      break;
-      case(ControlP5.ACTION_RELEASEDOUTSIDE):
-      println("Action:RELEASED OUTSIDE");
-      break;
-      case(ControlP5.ACTION_BROADCAST):
-      println("Action:BROADCAST");
-      break;
-    }
+  if(toggleValue==true) {
+    fill(255,255,220);
+  } else {
+    fill(128,128,110);
   }
+  translate(280,100);
+  ellipse(0,0,100,100);
+
+
+  translate(0,150);
+  fill(col);
+  ellipse(0,0,40,40);
+
+  popMatrix();
 }
 
 
 
-class Info {
-  float a;
-  float n = 0;
-  String txt = "";
-  Textarea label;
-
-  Info() {
-    label = cp5.addTextarea("Hello\nWorld")
-               .setSize(200,200)
-               .setPosition(300,40)
-               .setColor(color(255))
-               .setColorBackground(color(100,0))
-               .setLineHeight(12);
-
+void toggle(boolean theFlag) {
+  if(theFlag==true) {
+    col = color(255);
+  } else {
+    col = color(100);
   }
-
-  void update() {
-    a += (n-a)*0.1;
-    label.setColorBackground(color(100,255*a));
-  }
+  println("a toggle event.");
 }

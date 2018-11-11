@@ -1,12 +1,12 @@
 import controlP5.*;
 class HUD {
     PApplet sketch;
+    ControlP5 control;
     Field field;
     float curHeight;
     int showHeight;
     int hideHeight;
     boolean vis;
-    ControlP5 control;
     CallbackListener cb;
     Textlabel viewLabel;
     Textlabel algLabel;
@@ -14,24 +14,24 @@ class HUD {
     Toggle predictToggle;
     Toggle pathToggle;
     Toggle followToggle;
+    boolean Prediction;
     Button fieldStarter;
     Slider testSlider;
 
-    HUD(PApplet sketch, Field field) {
-        this.field = field;
+    HUD(PApplet sketch, ControlP5 control, Field field) {
         this.sketch = sketch;
+        this.control = control;
         this.showHeight = 200;
         this.curHeight = height;
         this.vis = false;
         this.font = createFont("OpenSansCondensed-Light.ttf", 32);
-
-        control = new ControlP5(sketch);
         // Labels
         viewLabel = new Textlabel(control, "View", 100, 10, 150,150);
         algLabel = new Textlabel(control, "Info", 800, 10, 150,150);
         viewLabel.setFont(this.font);
         algLabel.setFont(this.font);
         // View Buttons
+        Prediction = false;
         predictToggle = new Toggle(control, "Prediction");
         predictToggle.setSize(50,20);
         pathToggle = new Toggle(control, "Path");
@@ -52,6 +52,9 @@ class HUD {
         pushMatrix();
         translate(0, this.curHeight);
         fill(255, 100);
+        if (this.Prediction) {
+            fill(255,0,0);
+        }
         stroke(27, 196, 245);
         rect(0, 0, width-1, 210, 10);
         viewLabel.draw(this.sketch);
