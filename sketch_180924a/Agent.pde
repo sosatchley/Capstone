@@ -3,6 +3,7 @@ class Agent {
     Axle axle;
     Machine machine;
     Cutter cutter;
+    PVector pos;
 
     Agent() {
         this.wheels = new Wheels();
@@ -10,6 +11,7 @@ class Agent {
         this.axle = new Axle(this.machine, this.wheels);
         this.cutter = new Cutter(this.machine.pos);
         this.wheels.takeAgent(this);
+        this.pos = this.machine.pos;
     }
 
     void render() {
@@ -49,6 +51,19 @@ class Agent {
         return degrees;
     }
 
+    Wheels getWheels() {
+        return this.wheels;
+    }
 
+    public Axle getAxle() {
+        return this.axle;
+    }
 
+    Machine getMachine() {
+        return this.machine;
+    }
+
+    Cutter getCutter() {
+        return this.cutter;
+    }
 }

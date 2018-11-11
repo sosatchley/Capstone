@@ -62,7 +62,7 @@ class Wheels {
 
     void roll() {
         PVector p = PVector.fromAngle(this.steeringAngle+this.heading);
-        this.vel = p.div(2);
+        this.vel = p.mult(2);
         this.pos.add(this.vel);
     }
 
