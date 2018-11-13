@@ -9,6 +9,7 @@ Field field;
 int state;
 float bx;
 float by;
+float scale;
 float xOffset = 0.0;
 float yOffset = 0.0;
 boolean predict = false;
@@ -24,6 +25,7 @@ void setup() {
   control = new ControlP5(this);
   bx = 0;
   by = 0;
+  scale = 1;
   agent = new Agent();
   field = new Field(agent);
   hud = new HUD(this, control, field);
@@ -64,6 +66,20 @@ void mouseDragged() {
     hud.followToggle.setValue(false);
     bx = mouseX-xOffset;
     by = mouseY-yOffset;
+}
+
+void mouseWheel(MouseEvent event) {
+    pan = true;
+    follow = false;
+    reset = false;
+    float e = event.getCount()*-1;
+    scale += e/10;
+    if (scale < .48) {
+        scale = .5;
+    } else if (scale > 3.5) {
+        scale = 3.5;
+    }
+    println(scale);
 }
 
 void hudListener() {
@@ -107,6 +123,7 @@ void stateListener() {
         case(0) :
             if (pan) {
                 translate(bx, by);
+                zoom(width/2, height/2);
             } else if (follow) {
                 follow();
             } else {
@@ -129,6 +146,7 @@ void stateListener() {
                 reset = false;
             } else if (pan) {
                 translate(bx, by);
+                zoom(field.center.x/2, field.center.y/2);
             } else {
                 reset = true;
                 reset();
@@ -140,7 +158,9 @@ void follow() {
     PVector pos = agent.wheels.pos;
     bx = (width/2)-pos.x;
     by = (width/2)-pos.y;
+    // scale = 1;
     translate(bx, by);
+    zoom(pos.x, pos.y);
 }
 
 void reset() {
@@ -148,28 +168,24 @@ void reset() {
         bx = 0;
         by = 0;
         translate(bx, by);
+        scale = 1;
     } else {
-        PVector center = new PVector((field.maxX.x+field.minX.x)/2, (field.maxY.y+field.minY.y)/2);
-        float fieldWidth = field.maxX.x - field.minX.x;
-        float fieldHeight = field.maxY.y - field.minY.y;
-        float min;
-        float scale;
-        float yScale = height/fieldHeight;
-        float xScale = width/fieldWidth;
-        if (yScale>xScale) {
-            scale = xScale;
+        if (field.yScale > field.xScale) {
+            scale = field.xScale;
         } else {
-            scale = yScale;
+            scale = field.yScale;
         }
-        bx = (width/2)-center.x;
-        by = (height/2  )-center.y;
+        bx = (width/2)-field.center.x;
+        by = (height/2  )-field.center.y;
         translate(bx, by);
-        strokeWeight(10);
-        stroke(255,0,0);
-        translate(center.x, center.y);
-        scale(scale-(scale/10));
-        translate(-center.x, -center.y);
+        zoom(field.center.x, field.center.y);
     }
+}
+
+void zoom(float x, float y) {
+    translate(x, y);
+    scale(scale);
+    translate(-x, -y);
 }
 
 void keyPressed() {

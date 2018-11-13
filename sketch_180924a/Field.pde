@@ -14,6 +14,11 @@ class Field {
     PVector maxY;
     int v;
     Agent agent;
+    PVector center;
+    float fieldWidth;
+    float fieldHeight;
+    float xScale;
+    float yScale;
     // Util u = new Util();
 
 
@@ -95,6 +100,14 @@ class Field {
             }
             this.drawing = false;
             this.complete = true;
+
+            this.center = new PVector((field.maxX.x+field.minX.x)/2, (field.maxY.y+field.minY.y)/2);
+            this.fieldWidth = this.maxX.x - this.minX.x;
+            this.fieldHeight = this.maxY.y - this.minY.y;
+            this.xScale = width/this.fieldWidth;
+            this.yScale = height/this.fieldHeight;
+
+
             this.hud.fieldStarter.setOff();
             this.hud.resetView.mousePressed();
             this.hud.resetView.mouseReleased();
@@ -102,8 +115,6 @@ class Field {
             this.hud.followToggle.setValue(false);
             this.hud.resetView.setLock(false);
             this.v = 0;
-            println("just 1");
-            // this.start.setVisable(false);
             return true;
         }
         return false;
