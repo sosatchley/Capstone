@@ -79,7 +79,6 @@ void mouseWheel(MouseEvent event) {
     } else if (scale > 3.5) {
         scale = 3.5;
     }
-    println(scale);
 }
 
 void hudListener() {
@@ -146,7 +145,7 @@ void stateListener() {
                 reset = false;
             } else if (pan) {
                 translate(bx, by);
-                zoom(field.center.x/2, field.center.y/2);
+                zoom(field.center.x, field.center.y);
             } else {
                 reset = true;
                 reset();
