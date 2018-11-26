@@ -72,6 +72,12 @@ public Boolean fieldComplete(float x, float y) {
         this.running = false;
         this.shape.fill(87, 43, 163);
         this.shape.endShape(CLOSE);
+        for (int i = 0; i < this.v; i++) {
+            PVector vertex = this.shape.getVertex(i);
+            strokeWeight(10);
+            stroke(255, 0, 0);
+            point(vertex.x, vertex.y);
+        }
 
     }
     return false;

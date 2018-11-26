@@ -14,10 +14,13 @@ class HUD {
     Toggle predictToggle;
     Toggle pathToggle;
     Toggle followToggle;
+    Toggle sideToggle;
     boolean Prediction;
     Button fieldStarter;
     Button resetView;
     Slider testSlider;
+
+// TODO: Add program restart. Use redraw()
 
     HUD(PApplet sketch, ControlP5 control, Field field) {
         this.sketch = sketch;
@@ -44,6 +47,10 @@ class HUD {
         resetView = new Button(control, "reset");
         resetView.setSize(50, 20);
 
+        sideToggle = new Toggle(control, "Outside");
+        sideToggle.setSize(50, 20);
+        sideToggle.setMode(ControlP5.SWITCH);
+
         fieldStarter = new Button(control, "Start");
         fieldStarter.setSize(200, 100);
         fieldStarter.setSwitch(true);
@@ -51,6 +58,8 @@ class HUD {
 
         testSlider = new Slider(control, "Speed");
         testSlider.setSize(200, 10);
+        testSlider.setMin(0.5);
+        testSlider.setMax(3.0);
     }
 
 
@@ -70,6 +79,7 @@ class HUD {
         pathToggle.setPosition(width/20, curHeight+100);
         followToggle.setPosition(width/20, curHeight+150);
         resetView.setPosition(width/20 + width/10, curHeight + 100);
+        sideToggle.setPosition(width/2-25, curHeight +  25);
         fieldStarter.setPosition(width/2-100, curHeight+50);
         testSlider.setPosition(width/2-100, curHeight);
         popMatrix();
