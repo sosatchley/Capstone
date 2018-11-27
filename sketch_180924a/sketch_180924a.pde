@@ -43,6 +43,9 @@ void draw() {
         field.render();
     }
     agent.render();
+    if (field.complete) {
+        agent.controller.control();
+    }
     popMatrix();
     hud.render();
 }

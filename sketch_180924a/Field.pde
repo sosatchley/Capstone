@@ -197,6 +197,7 @@ class Field {
             this.v = 0;
             this.agent.field(this);
             this.agent.wheels.setVerts(this.verticies);
+            // this.agent.controller = new Controller(this.agent);
             return true;
         }
         return false;

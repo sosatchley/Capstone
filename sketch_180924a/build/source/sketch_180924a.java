@@ -62,6 +62,9 @@ public void draw() {
         field.render();
     }
     agent.render();
+    if (field.complete) {
+        agent.controller.control();
+    }
     popMatrix();
     hud.render();
 }
@@ -243,14 +246,17 @@ class Agent {
     Axle axle;
     Machine machine;
     Cutter cutter;
+    float cutterAngle;
     PVector pos;
     Field field;
     int loopCount;
     Vertex lastVertex;
     Vertex closestVertex;
+    float dist;
+    Controller controller;
 
     Agent() {
-
+        this.controller = new Controller(this);
         this.wheels = new Wheels();
         this.machine = new Machine(this.wheels.pos);
         this.axle = new Axle(this.machine, this.wheels);
@@ -263,9 +269,13 @@ class Agent {
 
     public void render() {
         this.wheels.show();
+        if (this.field != null) {
+            setClosestVert();
+        }
         this.axle.show();
         this.machine.show();
         this.cutter.show();
+        setCutterAngle(this.cutter.angle);
     }
 
     public void turn(int dir) {
@@ -277,6 +287,7 @@ class Agent {
             if (degrees(this.wheels.steeringAngle) > -60) {
                 this.wheels.turn(-0.1f);
             }
+        } else {
         }
     }
 
@@ -303,11 +314,20 @@ class Agent {
 
     public void setLastVert(Vertex vert) {
         this.lastVertex = vert;
-        this.closestVertex = this.wheels.findClosest();
-        point(this.closestVertex.x, this.closestVertex.y);
     }
 
+    public void setClosestVert() {
+        this.closestVertex = this.wheels.findClosest();
+    }
 
+    public void setDistance(float distance) {
+        this.dist = distance;
+    }
+
+    public void setCutterAngle(float angle) {
+        float cutterAngle = abs(abs(angle) - abs(this.wheels.heading));
+        this.cutterAngle = cutterAngle;
+    }
 
     public float radians(int degrees) {
         float radians = degrees * PI / 180;
@@ -424,139 +444,187 @@ class Axle {
     }
 
 }
-// class Controller {
-//     Agent agent
-//     double[][] QTable;
-//     int[][] visits;
-//     double gamma;
-//     double alpha = 1.0;
-//     int count = 0;
-//
-//     Controller(Agent agent) {
-//         this.agent = agent
-//     }
-//
-//     public void control() {
-//         if (count < 1) {
-//             initializeTable();
-//         }
-//         count++;
-//         double distance = findClosest();
-//         int stage = getState();
-//         double reward = getReward();
-//         int action = pickMaxAction();
-//         int statePrime = applyAction();
-//         double update = (1-alpha) * rewardFromTable(state, action) + alpha*(reward + gamma * pickMaxAction(statePrime));
-//         updateTable(state, action, update);
-//         for (int j = 0; j < QTable.length; j++) {
-//             for (int i = 0; i < QTable[j].length; i++) {
-//                 System.out.print("[" + visits[j][i] + "]");
-//             }
-//             System.out.println("");
-//         }
-//         System.out.println("---------");
-//         state = statePrime;
-//     }
-//
-//     private void initializeTable() {
-//         double random = Math.random();
-//         QTable = new double[5][4];
-//         visits = new int[5][4];
-//         for (int i = 0; i < QTable.length; i++) {
-//                 for (int j = 0; j < QTable[i].length; j++) {
-//                         QTable[i][j] = random;
-//                         visits[i][j] = 0;
-//                 }
-//         }
-//     }
-//
-//     private int applyAction(int index, Simulator sim) {
-//         switch(index) {
-//         case 0:
-//                 Action.FORWARD.applyTo(sim);
-//                 break;
-//         case 1:
-//                 Action.RIGHT.applyTo(sim);
-//                 break;
-//         case 2:
-//                 Action.LEFT.applyTo(sim);
-//                 break;
-//         case 3:
-//                 Action.BACKWARD.applyTo(sim);
-//                 break;
-//         }
-//         double distance = sim.findClosest();
-//         return getState(distance, sim);
-//     }
-//
-//     private int pickAction(int state) {
-//         if (state == 4) {
-//                 return 1;
-//         }
-//         double best = 0.0;
-//         int index = 0;
-//         for (int i = 0; i < QTable[state].length; i++) {
-//                 if (QTable[state][i] > best) {
-//                         best = QTable[state][i];
-//                         index = i;
-//                 }
-//         }
-//         visits[state][index] += 1;
-//         return index;
-//     }
-//
-//     private int pickMaxAction(int state) {
-//         double best = 0.0;
-//         int index = 0;
-//         for (int i = 0; i < QTable[state].length; i++) {
-//                 if (QTable[state][i] > best) {
-//                         best = QTable[state][i];
-//                         index = i;
-//                 }
-//         }
-//         visits[state][index] += 1;
-//         return index;
-//     }
-//
-//     private int getState(double distance, Simulator sim) {
-//         if (sim.isColliding()) {
-//                 return 4;
-//         } else if (distance > 10 && distance < 20) {
-//                 return 0;
-//         } else if (distance > 30 && distance < 30) {
-//                 return 1;
-//         } else if (distance > 60 && distance < 40) {
-//                 return 2;
-//         } else {
-//                 return 3;
-//         }
-//     }
-//
-//     private double getReward(int state) {
-//         switch(state) {
-//         case 0:
-//                 return 0.1;
-//         case 1:
-//                 return 0.25;
-//         case 2:
-//                 return 0.66;
-//         case 3:
-//                 return 1.0;
-//         case 4:
-//                 return -1.0;
-//         }
-//         return 0.0;
-//     }
-//
-//     private void updateTable(int state, int action, double update) {
-//         QTable[state][action] = update;
-//     }
-//
-//     private double rewardFromTable(int state, int action) {
-//         return QTable[state][action];
-//     }
-//
-// }
+class Controller {
+    Agent agent;
+    float[][] QTable;
+    int[][] visits;
+    float gamma = 0.5f;
+    float alpha = 1.0f;
+    int count = 0;
+
+    Controller(Agent agent) {
+        this.agent = agent;
+    }
+
+    public void control() {
+        if (count < 1) {
+            initializeTable();
+        }
+        count++;
+        float distClosest = this.agent.dist;
+        float angleClosest = this.agent.closestVertex.angle;
+        float cutterAngle = degrees(this.agent.cutterAngle);
+
+        int state = getState(distClosest, angleClosest, cutterAngle);
+        float reward = getReward(state);
+        int action;
+        if (this.count < 1000) {
+            action = pickAction(state);
+        } else {
+            action = pickMaxAction(state);
+        }
+        int statePrime = applyAction(action);
+        float update = (1-alpha) * rewardFromTable(state, action) +
+                    alpha*(reward + gamma * pickMaxAction(statePrime));
+        updateTable(state, action, update);
+        for (int j = 0; j < QTable.length; j++) {
+            for (int i = 0; i < QTable[j].length; i++) {
+                System.out.print("[" + visits[j][i] + "]");
+            }
+            System.out.println("");
+        }
+        System.out.println("---------");
+        state = statePrime;
+    }
+
+    public void initializeTable() {
+        QTable = new float[8][3];
+        visits = new int[8][3];
+        for (int i = 0; i < QTable.length; i++) {
+                for (int j = 0; j < QTable[i].length; j++) {
+                        float r = random(0, 1);
+                        QTable[i][j] = 0;
+                        visits[i][j] = 0;
+                }
+        }
+    }
+
+    public int getState(float distance, float vertAngle, float cutterAngle) {
+        if (cutterIsGood(cutterAngle)) {
+            if (distIsGood(distance)) {
+                if (steeringLess(vertAngle)) {
+                    return 0;
+                } else {
+                    return 1;
+                }
+            } else {
+                if (steeringLess(vertAngle)) {
+                    return 2;
+                } else {
+                    return 3;
+                }
+            }
+        } else {
+            if (distIsGood(distance)) {
+                if (steeringLess(vertAngle)) {
+                    return 4;
+                } else {
+                    return 5;
+                }
+            } else {
+                if (steeringLess(vertAngle)) {
+                    return 6;
+                } else {
+                    return 7;
+                }
+            }
+        }
+    }
+
+    public float getReward(int state) {
+        switch(state) {
+        case 0:
+                return 1.0f;
+        case 1:
+                return 1.0f;
+        case 2:
+                return 0.5f;
+        case 3:
+                return 0.5f;
+        case 4:
+                return -0.2f;
+        case 5:
+                return -0.2f;
+        case 6:
+                return -1.0f;
+        case 7:
+                return -1.0f;
+        }
+        return 0.0f;
+    }
+
+    public int pickAction(int state) {
+        double best = 0.0f;
+        int index = 0;
+        float r = random(3);
+        int f = floor(r);
+        // for (int i = 0; i < QTable[state].length; i++) {
+        //         if (QTable[state][i] == 0.0) {
+        //                 index = i;
+        //         } else if (QTable[state][i] > best){
+        //             best = QTable[state][i];
+        //             index = i;
+        //         }
+        // }
+        visits[state][index] += 1;
+        return f;
+    }
+
+    public int pickMaxAction(int state) {
+        double best = 0.0f;
+        int index = 0;
+        for (int i = 0; i < QTable[state].length; i++) {
+                if (QTable[state][i] > best) {
+                        best = QTable[state][i];
+                        index = i;
+                }
+        }
+        visits[state][index] += 1;
+        return index;
+    }
+
+    public int applyAction(int index) {
+        switch(index) {
+        case 0:
+                this.agent.turn(1);
+                // println("Went right");
+                break;
+        case 1:
+                this.agent.turn(0);
+                // println("Went left");
+                break;
+        case 2:
+                this.agent.turn(2);
+                // println("Went straight");
+                break;
+        }
+        float distClosest = this.agent.dist;
+        float angleClosest = this.agent.closestVertex.angle;
+        float cutterAngle = this.agent.cutterAngle;
+        return getState(distClosest, angleClosest, cutterAngle);
+    }
+
+    public void updateTable(int state, int action, float update) {
+        QTable[state][action] = update;
+    }
+
+    public float rewardFromTable(int state, int action) {
+        return QTable[state][action];
+    }
+
+    public boolean distIsGood(float dist) {
+        System.out.println(dist);
+        return dist < 10 ? true : false;
+    }
+
+    public boolean cutterIsGood(float angle) {
+        return angle < 50 ? true : false;
+    }
+
+    public boolean steeringLess(float angle) {
+        return abs(angle) > abs(this.agent.wheels.steeringAngle) ? true : false;
+    }
+}
 class Cutter {
     float angle;
     PVector pos;
@@ -794,6 +862,7 @@ class Field {
             this.v = 0;
             this.agent.field(this);
             this.agent.wheels.setVerts(this.verticies);
+            // this.agent.controller = new Controller(this.agent);
             return true;
         }
         return false;
@@ -1163,9 +1232,8 @@ class Wheels {
             strokeWeight(10);
             stroke(255);
         }
-        println(dist);
+        this.agent.setDistance(dist);
         return closest;
-        // point(closest.x, closest.y);
     }
 
     public void maintain() {

@@ -75,9 +75,8 @@ class Wheels {
             strokeWeight(10);
             stroke(255);
         }
-        println(dist);
+        this.agent.setDistance(dist);
         return closest;
-        // point(closest.x, closest.y);
     }
 
     void maintain() {

@@ -3,14 +3,17 @@ class Agent {
     Axle axle;
     Machine machine;
     Cutter cutter;
+    float cutterAngle;
     PVector pos;
     Field field;
     int loopCount;
     Vertex lastVertex;
     Vertex closestVertex;
+    float dist;
+    Controller controller;
 
     Agent() {
-
+        this.controller = new Controller(this);
         this.wheels = new Wheels();
         this.machine = new Machine(this.wheels.pos);
         this.axle = new Axle(this.machine, this.wheels);
@@ -23,9 +26,13 @@ class Agent {
 
     void render() {
         this.wheels.show();
+        if (this.field != null) {
+            setClosestVert();
+        }
         this.axle.show();
         this.machine.show();
         this.cutter.show();
+        setCutterAngle(this.cutter.angle);
     }
 
     void turn(int dir) {
@@ -37,6 +44,7 @@ class Agent {
             if (degrees(this.wheels.steeringAngle) > -60) {
                 this.wheels.turn(-0.1);
             }
+        } else {
         }
     }
 
@@ -63,11 +71,20 @@ class Agent {
 
     void setLastVert(Vertex vert) {
         this.lastVertex = vert;
-        this.closestVertex = this.wheels.findClosest();
-        point(this.closestVertex.x, this.closestVertex.y);
     }
 
+    void setClosestVert() {
+        this.closestVertex = this.wheels.findClosest();
+    }
 
+    void setDistance(float distance) {
+        this.dist = distance;
+    }
+
+    void setCutterAngle(float angle) {
+        float cutterAngle = abs(abs(angle) - abs(this.wheels.heading));
+        this.cutterAngle = cutterAngle;
+    }
 
     float radians(int degrees) {
         float radians = degrees * PI / 180;
