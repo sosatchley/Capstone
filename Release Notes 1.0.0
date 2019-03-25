@@ -1,0 +1,10 @@
+Release 1.0.0
+All basic functionality:
+    Field Drawing
+    Controller take-over
+    Basic Learner
+
+To-Do:
+    Arduino Input
+    Redo Controller
+    Upgrade UI for simpler use in tractor

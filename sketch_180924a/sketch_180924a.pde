@@ -17,9 +17,11 @@ boolean path = false;
 boolean reset = false;
 boolean follow = false;
 boolean pan = false;
+boolean controller = false;
 ControlP5 control;
 
 void setup() {
+    frameRate(60);
   size(1000, 1000);
   // fullScreen();
   control = new ControlP5(this);
@@ -42,6 +44,9 @@ void draw() {
         field.render();
     }
     agent.render();
+    if (controller) {
+        agent.controller.control();
+    }
     popMatrix();
     hud.render();
 }
@@ -50,7 +55,7 @@ void mouseListener() {
     if (mouseY > 900) {
         hud.show();
     }
-    else if (mouseY < 800) {
+    else if (mouseY < 700) {
         hud.hide();
     }
 }
@@ -61,11 +66,13 @@ void mousePressed() {
 }
 
 void mouseDragged() {
-    pan = true;
-    reset = false;
-    hud.followToggle.setValue(false);
-    bx = mouseX-xOffset;
-    by = mouseY-yOffset;
+    if (!hud.vis){
+        pan = true;
+        reset = false;
+        hud.followToggle.setValue(false);
+        bx = mouseX-xOffset;
+        by = mouseY-yOffset;
+    }
 }
 
 void mouseWheel(MouseEvent event) {
@@ -82,6 +89,7 @@ void mouseWheel(MouseEvent event) {
 }
 
 void hudListener() {
+    agent.wheels.speedMult = hud.testSlider.getValue();
     if (hud.predictToggle.getState()) {
         predict = true;
     } else {
@@ -102,11 +110,21 @@ void hudListener() {
     if (hud.fieldStarter.isPressed()) {
         field.startField(hud);
     }
+    if (hud.controller.getState()) {
+        controller = true;
+    } else {
+        controller = false;
+    }
 
     if (hud.resetView.isPressed()) {
         hud.followToggle.setValue(false);
         pan = false;
         reset = true;
+    }
+    if (hud.verticies.getState()) {
+        field.showVerticies = true;
+    } else {
+        field.showVerticies = false;
     }
 }
 
@@ -139,6 +157,7 @@ void stateListener() {
             follow();
             break;
         case(2) :
+            // agent.autoSteer(this.field);
             if (follow) {
                 follow();
                 pan = false;
@@ -211,6 +230,7 @@ void keyReleased() {
     //Record wheel to machine heading ratio at end of turn, turn wheels after release to maintain ratio
 }
 
-public void test() {
-    System.out.println("test");
+void exit() {
+  this.agent.controller.printQ();
+  super.exit();
 }

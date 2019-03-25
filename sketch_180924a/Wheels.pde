@@ -2,10 +2,12 @@ class Wheels {
     float steeringAngle;
     float drawAngle;
     float heading;
+    float speedMult;
     PVector pos;
     PVector vel;
     Agent agent;
     Boolean rolling;
+    ArrayList<Vertex> verts;
 
 // Constructs Wheel Object
     Wheels() {
@@ -15,17 +17,21 @@ class Wheels {
         this.pos = new PVector(width/2, height/2);
         this.vel = new PVector(0, 0);
         this.rolling = false;
+        this.speedMult = .5;
     }
 
 // Renders Wheel object on canvas
     void show() {
         pushMatrix();
-        stroke(255,0,0);
-        strokeWeight(3);
         translate(this.pos.x, this.pos.y);
         this.heading = this.agent.machine.angle;
         rotate(heading + PI/2);
+        // if (this.verts != null) {
+        //     findClosest();
+        // }
         maintain();
+        stroke(255,0,0);
+        strokeWeight(3);
         showLeft();
         showRight();
         popMatrix();
@@ -50,6 +56,27 @@ class Wheels {
         popMatrix();
     }
 
+    void setVerts(ArrayList<Vertex> verts) {
+        this.verts = verts;
+    }
+
+    Vertex findClosest() {
+        float thisDist;
+        float dist = 0;
+        Vertex closest = null;
+        for (Vertex vert : this.verts) {
+            thisDist = dist(this.pos.x, this.pos.y, vert.x, vert.y);
+            if (thisDist < dist || dist == 0) {
+                if (abs(degrees(atan2(vert.y, vert.x))) < 90) {
+                    closest = vert;
+                    dist = thisDist;
+                }
+            }
+        }
+        this.agent.setDistance(dist);
+        return closest;
+    }
+
     void maintain() {
         this.drawAngle = this.steeringAngle + this.heading;
         this.drawAngle -= this.heading;
@@ -62,7 +89,7 @@ class Wheels {
 
     void roll() {
         PVector p = PVector.fromAngle(this.steeringAngle+this.heading);
-        this.vel = p.mult(2);
+        this.vel = p.mult(this.speedMult);
         this.pos.add(this.vel);
     }
 
