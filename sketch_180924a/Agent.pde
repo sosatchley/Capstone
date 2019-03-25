@@ -56,7 +56,7 @@ class Agent {
         this.wheels.rolling = false;
     }
 
-    void loopCheck() {
+    void loopCheck() { // Removes verticies 2 loops or more behind most recent vertex
         int moves;
         if (this.lastVertex == null) {
             moves = 0;

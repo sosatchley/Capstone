@@ -4,6 +4,7 @@ class Field {
     Boolean begun;
     Boolean drawing;
     Boolean complete;
+    Boolean showVerticies;
     PShape shape;
     PShape start;
     PShape cutPath;
@@ -88,6 +89,11 @@ class Field {
             this.agent.loopCheck();
             for (int i = 0; i < this.verticies.size(); i++) {
                 Vertex vertex = this.verticies.get(i);
+                if (this.showVerticies) {
+                    strokeWeight(3);
+                    stroke(#3e2993);
+                    point(vertex.x, vertex.y);
+                }
                 vertex.render();
             }
         }
@@ -197,6 +203,7 @@ class Field {
             this.v = 0;
             this.agent.field(this);
             this.agent.wheels.setVerts(this.verticies);
+            this.hud.controller.setValue(true);
             // this.agent.controller = new Controller(this.agent);
             return true;
         }

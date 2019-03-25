@@ -3,7 +3,7 @@ class Controller {
     float[][] QTable;
     int[][] visits;
     float gamma = 0.5;
-    float alpha = 1.0;
+    float alpha = 0.5;
     int count = 0;
 
     Controller(Agent agent) {
@@ -22,7 +22,7 @@ class Controller {
         int state = getState(distClosest, angleClosest, cutterAngle);
         float reward = getReward(state);
         int action;
-        if (this.count < 1000) {
+        if (this.count < 10000) {
             action = pickAction(state);
         } else {
             action = pickMaxAction(state);
@@ -31,13 +31,13 @@ class Controller {
         float update = (1-alpha) * rewardFromTable(state, action) +
                     alpha*(reward + gamma * pickMaxAction(statePrime));
         updateTable(state, action, update);
-        for (int j = 0; j < QTable.length; j++) {
-            for (int i = 0; i < QTable[j].length; i++) {
-                System.out.print("[" + visits[j][i] + "]");
-            }
-            System.out.println("");
-        }
-        System.out.println("---------");
+        // for (int j = 0; j < QTable.length; j++) {
+        //     for (int i = 0; i < QTable[j].length; i++) {
+        //         System.out.print("[" + visits[j][i] + "]");
+        //     }
+        //     System.out.println("");
+        // }
+        // System.out.println("---------");
         state = statePrime;
     }
 
@@ -100,9 +100,9 @@ class Controller {
         case 5:
                 return -0.2;
         case 6:
-                return -1.0;
+                return -10.0;
         case 7:
-                return -1.0;
+                return -10.0;
         }
         return 0.0;
     }
@@ -177,5 +177,15 @@ class Controller {
 
     boolean steeringLess(float angle) {
         return abs(angle) > abs(this.agent.wheels.steeringAngle) ? true : false;
+    }
+
+    void printQ() {
+        for (int j = 0; j < QTable.length; j++) {
+            for (int i = 0; i < QTable[j].length; i++) {
+                System.out.print("[" + QTable[j][i] + "]");
+            }
+            System.out.println("");
+        }
+        System.out.println("---------");
     }
 }

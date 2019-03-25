@@ -36,6 +36,7 @@ boolean path = false;
 boolean reset = false;
 boolean follow = false;
 boolean pan = false;
+boolean controller = false;
 ControlP5 control;
 
 public void setup() {
@@ -62,7 +63,7 @@ public void draw() {
         field.render();
     }
     agent.render();
-    if (field.complete) {
+    if (controller) {
         agent.controller.control();
     }
     popMatrix();
@@ -128,11 +129,21 @@ public void hudListener() {
     if (hud.fieldStarter.isPressed()) {
         field.startField(hud);
     }
+    if (hud.controller.getState()) {
+        controller = true;
+    } else {
+        controller = false;
+    }
 
     if (hud.resetView.isPressed()) {
         hud.followToggle.setValue(false);
         pan = false;
         reset = true;
+    }
+    if (hud.verticies.getState()) {
+        field.showVerticies = true;
+    } else {
+        field.showVerticies = false;
     }
 }
 
@@ -238,8 +249,9 @@ public void keyReleased() {
     //Record wheel to machine heading ratio at end of turn, turn wheels after release to maintain ratio
 }
 
-public void test() {
-    System.out.println("test");
+public void exit() {
+  this.agent.controller.printQ();
+  super.exit();
 }
 class Agent {
     Wheels wheels;
@@ -299,7 +311,7 @@ class Agent {
         this.wheels.rolling = false;
     }
 
-    public void loopCheck() {
+    public void loopCheck() { // Removes verticies 2 loops or more behind most recent vertex
         int moves;
         if (this.lastVertex == null) {
             moves = 0;
@@ -449,7 +461,7 @@ class Controller {
     float[][] QTable;
     int[][] visits;
     float gamma = 0.5f;
-    float alpha = 1.0f;
+    float alpha = 0.5f;
     int count = 0;
 
     Controller(Agent agent) {
@@ -468,7 +480,7 @@ class Controller {
         int state = getState(distClosest, angleClosest, cutterAngle);
         float reward = getReward(state);
         int action;
-        if (this.count < 1000) {
+        if (this.count < 10000) {
             action = pickAction(state);
         } else {
             action = pickMaxAction(state);
@@ -477,13 +489,13 @@ class Controller {
         float update = (1-alpha) * rewardFromTable(state, action) +
                     alpha*(reward + gamma * pickMaxAction(statePrime));
         updateTable(state, action, update);
-        for (int j = 0; j < QTable.length; j++) {
-            for (int i = 0; i < QTable[j].length; i++) {
-                System.out.print("[" + visits[j][i] + "]");
-            }
-            System.out.println("");
-        }
-        System.out.println("---------");
+        // for (int j = 0; j < QTable.length; j++) {
+        //     for (int i = 0; i < QTable[j].length; i++) {
+        //         System.out.print("[" + visits[j][i] + "]");
+        //     }
+        //     System.out.println("");
+        // }
+        // System.out.println("---------");
         state = statePrime;
     }
 
@@ -546,9 +558,9 @@ class Controller {
         case 5:
                 return -0.2f;
         case 6:
-                return -1.0f;
+                return -10.0f;
         case 7:
-                return -1.0f;
+                return -10.0f;
         }
         return 0.0f;
     }
@@ -624,6 +636,16 @@ class Controller {
     public boolean steeringLess(float angle) {
         return abs(angle) > abs(this.agent.wheels.steeringAngle) ? true : false;
     }
+
+    public void printQ() {
+        for (int j = 0; j < QTable.length; j++) {
+            for (int i = 0; i < QTable[j].length; i++) {
+                System.out.print("[" + QTable[j][i] + "]");
+            }
+            System.out.println("");
+        }
+        System.out.println("---------");
+    }
 }
 class Cutter {
     float angle;
@@ -669,6 +691,7 @@ class Field {
     Boolean begun;
     Boolean drawing;
     Boolean complete;
+    Boolean showVerticies;
     PShape shape;
     PShape start;
     PShape cutPath;
@@ -753,6 +776,11 @@ class Field {
             this.agent.loopCheck();
             for (int i = 0; i < this.verticies.size(); i++) {
                 Vertex vertex = this.verticies.get(i);
+                if (this.showVerticies) {
+                    strokeWeight(3);
+                    stroke(0xff3e2993);
+                    point(vertex.x, vertex.y);
+                }
                 vertex.render();
             }
         }
@@ -862,6 +890,7 @@ class Field {
             this.v = 0;
             this.agent.field(this);
             this.agent.wheels.setVerts(this.verticies);
+            this.hud.controller.setValue(true);
             // this.agent.controller = new Controller(this.agent);
             return true;
         }
@@ -896,6 +925,8 @@ class HUD {
     Toggle pathToggle;
     Toggle followToggle;
     Toggle sideToggle;
+    Toggle controller;
+    Toggle verticies;
     boolean Prediction;
     Button fieldStarter;
     Button resetView;
@@ -932,6 +963,16 @@ class HUD {
         sideToggle.setSize(50, 20);
         sideToggle.setMode(ControlP5.SWITCH);
 
+        controller = new Toggle(control, "Controller");
+        controller.setSize(50, 20);
+        controller.setMode(ControlP5.SWITCH);
+        controller.setValue(false);
+
+        verticies = new Toggle (control, "Verticies");
+        verticies.setSize(50,20);
+        verticies.setMode(ControlP5.SWITCH);
+        verticies.setValue(false);
+
         fieldStarter = new Button(control, "Start");
         fieldStarter.setSize(200, 100);
         fieldStarter.setSwitch(true);
@@ -959,7 +1000,9 @@ class HUD {
         predictToggle.setPosition(width/20,curHeight+50);
         pathToggle.setPosition(width/20, curHeight+100);
         followToggle.setPosition(width/20, curHeight+150);
+        verticies.setPosition(width/20 + width/10, curHeight + 50);
         resetView.setPosition(width/20 + width/10, curHeight + 100);
+        controller.setPosition(width/20 + width/10, curHeight + 150);
         sideToggle.setPosition(width/2-25, curHeight +  25);
         fieldStarter.setPosition(width/2-100, curHeight+50);
         testSlider.setPosition(width/2-100, curHeight);
@@ -1061,6 +1104,16 @@ class Vertex {
         this.moves = 0;
         this.deprecated = false;
     }
+
+    Vertex(Vertex oldVertex, PVector pos, float angle, Vertex neighbor) {
+        this.agent = oldVertex.agent;
+        this.x = pos.x;
+        this.y = pos.y;
+        this.angle = angle;
+        this.neighbor = neighbor;
+
+    }
+
 
     Vertex(Agent agent, float x, float y, float angle, Vertex neighborint, int side) {
         this.agent = agent;
@@ -1229,8 +1282,6 @@ class Wheels {
                     dist = thisDist;
                 }
             }
-            strokeWeight(10);
-            stroke(255);
         }
         this.agent.setDistance(dist);
         return closest;

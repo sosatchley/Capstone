@@ -72,8 +72,6 @@ class Wheels {
                     dist = thisDist;
                 }
             }
-            strokeWeight(10);
-            stroke(255);
         }
         this.agent.setDistance(dist);
         return closest;

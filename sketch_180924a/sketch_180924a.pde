@@ -17,6 +17,7 @@ boolean path = false;
 boolean reset = false;
 boolean follow = false;
 boolean pan = false;
+boolean controller = false;
 ControlP5 control;
 
 void setup() {
@@ -43,7 +44,7 @@ void draw() {
         field.render();
     }
     agent.render();
-    if (field.complete) {
+    if (controller) {
         agent.controller.control();
     }
     popMatrix();
@@ -109,11 +110,21 @@ void hudListener() {
     if (hud.fieldStarter.isPressed()) {
         field.startField(hud);
     }
+    if (hud.controller.getState()) {
+        controller = true;
+    } else {
+        controller = false;
+    }
 
     if (hud.resetView.isPressed()) {
         hud.followToggle.setValue(false);
         pan = false;
         reset = true;
+    }
+    if (hud.verticies.getState()) {
+        field.showVerticies = true;
+    } else {
+        field.showVerticies = false;
     }
 }
 
@@ -219,6 +230,7 @@ void keyReleased() {
     //Record wheel to machine heading ratio at end of turn, turn wheels after release to maintain ratio
 }
 
-public void test() {
-    System.out.println("test");
+void exit() {
+  this.agent.controller.printQ();
+  super.exit();
 }

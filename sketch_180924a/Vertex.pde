@@ -40,6 +40,16 @@ class Vertex {
         this.deprecated = false;
     }
 
+    Vertex(Vertex oldVertex, PVector pos, float angle, Vertex neighbor) {
+        this.agent = oldVertex.agent;
+        this.x = pos.x;
+        this.y = pos.y;
+        this.angle = angle;
+        this.neighbor = neighbor;
+
+    }
+
+
     Vertex(Agent agent, float x, float y, float angle, Vertex neighborint, int side) {
         this.agent = agent;
         this.x = x;
