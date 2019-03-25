@@ -1,6 +1,7 @@
+
 // class Util() {
 //
-//     Util() {}
+//     Util()
 
     String coord(float x, float y) {
         String coord = "(" + x + ":" + y + ")";
@@ -25,3 +26,31 @@
             }
         }
     }
+
+    double distance(PVector p, PVector q) {
+        float x1 = p.x;
+        float x2 = q.x;
+        float y1 = p.y;
+        float y2 = q.y;
+        double dist;
+        dist = sqrt(pow((x2-x1), 2)-pow((y2-y1), 2));
+        return dist;
+    }
+
+    PVector angularDisplacement(float x, float y, float skew, float baseAngle, float change) {
+        float Lx = x + skew * cos(baseAngle - change);
+        float Ly = y + skew * sin(baseAngle - change);
+        return new PVector(Lx, Ly);
+    }
+
+    PVector angularDisplacement(PVector pos, float skew, float baseAngle, float change) {
+        float x = pos.x;
+        float y = pos.y;
+        float Lx = x + skew * cos(baseAngle - change);
+        float Ly = y + skew * sin(baseAngle - change);
+        return new PVector(Lx, Ly);
+    }
+    // float Lx = x + 9 * cos(this.agent.wheels.heading - this.angle);
+    // float Ly = y + 9 * sin(this.agent.wheels.heading - this.angle);
+    // float Rx= x + 9 * cos(this.agent.wheels.heading + this.angle);
+    // float Ry = y + 9 * sin(this.agent.wheels.heading + this.angle);

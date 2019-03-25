@@ -14,21 +14,32 @@ import java.io.IOException;
 
 public class sketch_181106a extends PApplet {
 
-public void setup() {
-    
 
+PShape s;
+
+public void setup() {
+
+s = createShape();
+s.beginShape();
+s.vertex(0, 0);
+s.vertex(60, 0);
+s.vertex(60, 60);
+s.vertex(0, 60);
+s.endShape(CLOSE);
 }
 
 public void draw() {
-    // pushMatrix();
-    translate(500,500);
-    scale(5);
-    translate(-500,-500);
-    ellipse(500,500, 200, 200);
-    // popMatrix();
-    // ellipse(100, 100, 20, 20);
+translate(20, 20);
+for (int i = 0; i < s.getVertexCount(); i++) {
+PVector v = s.getVertex(i);
+v.x += random(-1, 1);
+v.y += random(-1, 1);
+s.setVertex(i, v);
 }
-  public void settings() {  size(1000,1000); }
+shape(s);
+}
+  public void settings() { 
+size(100, 100); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "sketch_181106a" };
     if (passedArgs != null) {

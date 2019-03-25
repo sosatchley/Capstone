@@ -19,6 +19,8 @@ class Cutter {
         rotate(this.angle);
         line(9,0,16,0);
         ellipse(0,0,18,18);
+        stroke(255, 0, 0);
+        point(0, 0);
         popMatrix();
     }
 
