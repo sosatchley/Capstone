@@ -14,7 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class tractorino extends PApplet {
+public class tractorinoController extends PApplet {
 
 
 
@@ -111,7 +111,7 @@ public void play(int theValue) {
 }
   public void settings() {  size(400,600); }
   static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "tractorino" };
+    String[] appletArgs = new String[] { "tractorinoController" };
     if (passedArgs != null) {
       PApplet.main(concat(appletArgs, passedArgs));
     } else {
