@@ -1,93 +1,259 @@
-deimport controlP5.*;
+import processing.serial.*;
 
-ControlP5 cp5;
-
-int myColor = color(255);
-
-int c1,c2;
-
-float n,n1;
-
+float wheelSpeed;
+float wheelRotate;
+Wheel wheel;
+SteeringWheel steeringWheel;
+int mouseStart;
+Serial serialPort;
+int[] serialInArray = new int[3];
+int serialCount = 0;
+boolean firstContact = false;
 
 void setup() {
-  size(400,600);
-  noStroke();
-  cp5 = new ControlP5(this);
-
-  // create a new button with name 'buttonA'
-  cp5.addButton("colorA")
-     .setValue(0)
-     .setPosition(100,100)
-     .setSize(200,19)
-     ;
-
-  // and add another 2 buttons
-  cp5.addButton("colorB")
-     .setValue(100)
-     .setPosition(100,120)
-     .setSize(200,19)
-     ;
-
-  cp5.addButton("colorC")
-     .setPosition(100,140)
-     .setSize(200,19)
-     .setValue(0)
-     ;
-
-  PImage[] imgs = {loadImage("button_a.png"),loadImage("button_b.png"),loadImage("button_c.png")};
-  cp5.addButton("play")
-     .setValue(128)
-     .setPosition(140,300)
-     .setImages(imgs)
-     .updateSize()
-     ;
-
-  cp5.addButton("playAgain")
-     .setValue(128)
-     .setPosition(210,300)
-     .setImages(imgs)
-     .updateSize()
-     ;
-
+    size(600,1000);
+    this.wheel = new Wheel(width/2,height/4*3+25);
+    this.steeringWheel = new SteeringWheel(width/2, height/4, 3);
+    this.wheelSpeed = 0;
+    this.wheelRotate = 0;
+    this.mouseStart = 0;
+    String portName = Serial.list()[0];
+    serialPort = new Serial(this, portName, 9600);
 }
 
 void draw() {
-  background(myColor);
-  myColor = lerpColor(c1,c2,n);
-  n += (1-n)* 0.1;
+    background(127,200,127);
+    this.wheel.render();
+    this.wheel.turn(this.wheelSpeed);
+    this.steeringWheel.render();
+    this.steeringWheel.turn(this.wheelRotate);
 }
 
-public void controlEvent(ControlEvent theEvent) {
-  println(theEvent.getController().getName());
-  n = 0;
+void serialEvent(Serial serialPort) {
+    // println(serialPort.read());
+    int inByte = serialPort.read();
+    if (firstContact == false) {
+        if (inByte == 'A') {
+            serialPort.clear();
+            firstContact = true;
+            println("FirstContact");
+            serialPort.write('A');
+
+        }
+    } else {
+        serialInArray[serialCount] = inByte;
+        serialCount++;
+        if (serialCount > 0) {
+            this.wheelRotate = lerp(this.wheelRotate, map(serialInArray[0], 0, 255, radians(-720), radians(720)), .05);
+            // wheelSpeed = radians(serialInArray[1]);
+            // println(serialInArray[0] + "\t" + serialInArray[1]);
+            // println(serialInArray[0] + "\t" + serialInArray[1] + "\t" + serialInArray[2]);
+            println(serialInArray[0] + "\t" + degrees(this.wheelRotate));
+            serialPort.write('A');
+            serialCount = 0;
+        }
+    }
 }
 
-// function colorA will receive changes from
-// controller with name colorA
-public void colorA(int theValue) {
-  println("a button event from colorA: "+theValue);
-  c1 = c2;
-  c2 = color(0,160,100);
+void mousePressed() {
+    this.mouseStart = mouseX;
+    if (mouseY > 500) {
+        if (mouseButton == LEFT) {
+            this.wheelSpeed = (radians(2.0));
+        } else { //1
+            this.wheelSpeed = (radians(-1.0));
+        }
+    } else {
+        if (mouseButton == LEFT) {
+            // this.wheelRotate += (radians(1.0));
+        } else {
+            // this.wheelRotate -= (radians(1.0));
+        }
+    }
 }
 
-// function colorB will receive changes from
-// controller with name colorB
-public void colorB(int theValue) {
-  println("a button event from colorB: "+theValue);
-  c1 = c2;
-  c2 = color(150,0,0);
+void mouseReleased() {
+    this.wheelSpeed = (radians(0.0));
+    // this.wheelRotate = 0;
 }
 
-// function colorC will receive changes from
-// controller with name colorC
-public void colorC(int theValue) {
-  println("a button event from colorC: "+theValue);
-  c1 = c2;
-  c2 = color(255,255,0);
+void mouseDragged() {
+    if (mouseY < 500) {
+        this.wheelRotate = radians(-1*(mouseX - this.mouseStart));
+    }
 }
 
-public void play(int theValue) {
-  println("a button event from buttonB: "+theValue);
-  c1 = c2;
-  c2 = color(0,0,0);
+//-----------------------------------------------------------------
+
+class Wheel {
+    float speed;
+    float rotation;
+    float x;
+    float y;
+
+    Wheel(float x, float y) {
+        this.speed = 0;
+        this.rotation = 0;
+        this.x = x;
+        this.y = y;
+    }
+
+    void turn(float angle) {
+        this.speed = lerp(this.speed, angle, 0.04);
+        this.rotation += this.speed;
+        // println(this.rotation);
+    }
+
+    void render() {
+        pushMatrix();
+        translate(this.x, this.y);
+        rotate(this.rotation);
+        int shadowWidth = 5;
+        int gradStart = 235;
+        int gradStop = 175;
+        int gradWidth = (gradStart-gradStop)/10;
+
+        // Main Tire
+        stroke(0);
+        strokeWeight(1);
+        fill(0);
+        ellipse(0,0,500,500);
+
+        // Outer Wheel
+        fill(200);
+        ellipse(0,0,300,300);
+
+        // Wheel Gap (Outside of Octogon)
+        fill(20);
+        ellipse(0,0,250,250);
+
+        // Middle Wheel (Octogon)
+        fill(200);
+        polygon(0,0,130,8);
+
+        // Shadow/Inner Wheel
+        for (int i = 0; i <= 10; i++) {
+            int gradSize = gradStart-i*gradWidth;
+            strokeWeight(gradWidth);
+            stroke(0,0+i*10);
+            ellipse(0,0,gradSize,gradSize);
+        }
+
+        // Lug Ring
+        fill(200);
+        stroke(20);
+        strokeWeight(1);
+        ellipse(0,0,100,100);
+
+        // Axle
+        fill(0,0,150);
+        ellipse(0,0,50,50);
+
+        // Lug nuts
+        fill(200);
+        stroke(20);
+        for(int i = 0; i < 8; i ++) {
+            pushMatrix();
+            rotate(i*radians(360/8));
+            translate(0,-37);
+            ellipse(0,0,16,16);
+            popMatrix();
+        }
+
+        // Tire Tread
+        fill(20);
+        for(int i = 0; i < 24; i++) {
+            pushMatrix();
+            rotate(i*radians(360/24));
+            translate(0,-250);
+            beginShape();
+            vertex(0,0);
+            vertex(10,-10);
+            vertex(25,-10);
+            vertex(25,5);
+            endShape();
+            popMatrix();
+        }
+        popMatrix();
+    }
+
+    void polygon(float x, float y, float radius, int npoints) {
+        float angle = TWO_PI / npoints;
+        beginShape();
+        for (float a = 0; a < TWO_PI; a += angle) {
+            float sx = x + cos(a) * radius;
+            float sy = y + sin(a) * radius;
+            vertex(sx, sy);
+        }
+        endShape(CLOSE);
+    }
+}
+
+//-----------------------------------------------------------------
+
+class SteeringWheel {
+    float rotation;
+    float x;
+    float y;
+    int bars;
+
+    SteeringWheel(float x, float y, int bars) {
+        this.rotation = 0;
+        this.x = x;
+        this.y = y;
+        this.bars = bars;
+    }
+
+    void turn(float angle) {
+        this.rotation = angle;
+        // println(rotation);
+    }
+
+    void render() {
+        pushMatrix();
+        translate(this.x, this.y);
+        rotate(this.rotation);
+        // Outer Ring
+        stroke(0);
+        strokeWeight(1);
+        fill(0);
+        ellipse(0,0,500,500);
+
+        // Fake background
+        strokeWeight(1);
+        fill(127,200,127);
+        ellipse(0,0,450,450);
+
+        // Supports
+        fill(50);
+        noStroke();
+        for(int i = 0; i < this.bars; i++) {
+            pushMatrix();
+            rotate(i*radians(360/this.bars));
+            translate(0, -225);
+            beginShape();
+            vertex(10,0);
+            vertex(7,10);
+            vertex(7,100);
+            vertex(10,150);
+            vertex(15,200);
+            vertex(20,225);
+
+            vertex(-20,225);
+            vertex(-15,200);
+            vertex(-10,150);
+            vertex(-7,100);
+            vertex(-7,10);
+            vertex(-10,0);
+            endShape();
+            popMatrix();
+        }
+
+        // Center Column
+        fill(0);
+        strokeWeight(1);
+        ellipse(0,0,75,75);
+        popMatrix();
+    }
+
 }
