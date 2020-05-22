@@ -89,11 +89,6 @@ class Field {
             this.agent.loopCheck();
             for (int i = 0; i < this.verticies.size(); i++) {
                 Vertex vertex = this.verticies.get(i);
-                if (this.showVerticies) {
-                    strokeWeight(3);
-                    stroke(#3e2993);
-                    point(vertex.x, vertex.y);
-                }
                 vertex.render();
             }
         }
@@ -193,13 +188,10 @@ class Field {
             this.xScale = width/this.fieldWidth;
             this.yScale = height/this.fieldHeight;
 
-
+            this.hud.currentView = ViewMode.CENTER;
+            this.hud.viewButton.setLock(false);
+            this.hud.viewButton.setLabel("Follow");
             this.hud.fieldStarter.setOff();
-            this.hud.resetView.mousePressed();
-            this.hud.resetView.mouseReleased();
-            this.hud.followToggle.setLock(false);
-            this.hud.followToggle.setValue(false);
-            this.hud.resetView.setLock(false);
             this.v = 0;
             this.agent.field(this);
             this.agent.wheels.setVerts(this.verticies);

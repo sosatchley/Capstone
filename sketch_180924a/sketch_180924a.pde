@@ -2,6 +2,7 @@
 // CSCI 410
 // Auto-Steer Simulation
 import controlP5.*;
+// import ViewModes;
 
 public Agent agent;
 HUD hud;
@@ -12,13 +13,9 @@ float by;
 float scale;
 float xOffset = 0.0;
 float yOffset = 0.0;
-boolean predict = false;
-boolean path = false;
-boolean reset = false;
-boolean follow = false;
-boolean pan = false;
 boolean controller = false;
 ControlP5 control;
+ViewMode currentView;
 
 void setup() {
     frameRate(60);
@@ -32,6 +29,7 @@ void setup() {
   field = new Field(agent);
   hud = new HUD(this, control, field);
   state = 0;
+  currentView = ViewMode.FOLLOW;
 }
 
 void draw() {
@@ -39,7 +37,8 @@ void draw() {
     hudListener();
     background(0);
     pushMatrix();
-    stateListener();
+    // stateListener();
+    drawView();
     if (field.begun) {
         field.render();
     }
@@ -67,18 +66,14 @@ void mousePressed() {
 
 void mouseDragged() {
     if (!hud.vis){
-        pan = true;
-        reset = false;
-        hud.followToggle.setValue(false);
+        hud.currentView = ViewMode.PAN;
         bx = mouseX-xOffset;
         by = mouseY-yOffset;
     }
 }
 
 void mouseWheel(MouseEvent event) {
-    pan = true;
-    follow = false;
-    reset = false;
+    hud.currentView = ViewMode.PAN;
     float e = event.getCount()*-1;
     scale += e/10;
     if (scale < .48) {
@@ -89,24 +84,7 @@ void mouseWheel(MouseEvent event) {
 }
 
 void hudListener() {
-    agent.wheels.speedMult = hud.testSlider.getValue();
-    if (hud.predictToggle.getState()) {
-        predict = true;
-    } else {
-        predict = false;
-    }
-    if (hud.pathToggle.getState()) {
-        path = true;
-    } else {
-        path = false;
-    }
-    if (hud.followToggle.getState()) {
-        follow = true;
-        pan = false;
-        reset = false;
-    } else {
-        follow = false;
-    }
+    agent.wheels.speedMult = hud.speedSlider.getValue();
     if (hud.fieldStarter.isPressed()) {
         field.startField(hud);
     }
@@ -115,61 +93,26 @@ void hudListener() {
     } else {
         controller = false;
     }
+}
 
-    if (hud.resetView.isPressed()) {
-        hud.followToggle.setValue(false);
-        pan = false;
-        reset = true;
-    }
-    if (hud.verticies.getState()) {
-        field.showVerticies = true;
-    } else {
-        field.showVerticies = false;
+void drawView() {
+    switch(hud.currentView) {
+        case PAN :
+            pan();
+            break;
+        case FOLLOW :
+            follow();
+            break;
+        case CENTER :
+            reset();
+            break;
     }
 }
 
-void stateListener() {
-    if (!field.begun) {
-        state = 0;
-    } else if (field.drawing) {
-        state = 1;
-    } else if (field.complete) {
-        state = 2;
-    }
-    switch(state) {
-        case(0) :
-            if (pan) {
-                translate(bx, by);
-                zoom(width/2, height/2);
-            } else if (follow) {
-                follow();
-            } else {
-                bx = 0;
-                by = 0;
-                translate(bx, by);
-            }
-            break;
-        case(1) :
-            hud.followToggle.setValue(true);
-            hud.followToggle.setLock(true);
-            hud.resetView.setLock(true);
-            follow = true;
-            follow();
-            break;
-        case(2) :
-            // agent.autoSteer(this.field);
-            if (follow) {
-                follow();
-                pan = false;
-                reset = false;
-            } else if (pan) {
-                translate(bx, by);
-                zoom(field.center.x, field.center.y);
-            } else {
-                reset = true;
-                reset();
-            }
-        }
+void pan() {
+    hud.viewButton.setLabel("Follow");
+    translate(bx, by);
+    zoom(field.center.x, field.center.y);
 }
 
 void follow() {
@@ -217,12 +160,6 @@ void keyPressed() {
         agent.halt();
     } else if (key == ' ') {
         field.startField(hud);
-    } else if (key == 'c') {
-        if (!reset) {
-            reset = true;
-        } else {
-            reset = false;
-        }
     }
 }
 
@@ -231,6 +168,8 @@ void keyReleased() {
 }
 
 void exit() {
-  this.agent.controller.printQ();
+  if (this.agent.controller.QTable != null) {
+    this.agent.controller.printQ();
+  }
   super.exit();
 }

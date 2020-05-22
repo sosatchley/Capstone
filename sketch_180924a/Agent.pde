@@ -152,8 +152,8 @@ class Agent {
                     dist = thisDist;
                     p = closest[i];
                     q = closest[j];
-                    println("P: " + coord(p));
-                    println("Q: " + coord(q));
+                    // println("P: " + coord(p));
+                    // println("Q: " + coord(q));
                 }
             }
         }
