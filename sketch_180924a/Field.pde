@@ -41,6 +41,9 @@ class Field {
         this.hud = hud;
         this.side = hud.sideToggle.getBooleanValue() ? 90 : -90;
         this.hud.fieldStarter.setOn();
+        this.hud.currentView = ViewMode.FOLLOW;
+        this.hud.viewButton.setLock(true);
+        this.hud.viewButton.setLabel("Follow");
         this.startx = this.agent.getAxle().pos.x;
         this.starty = this.agent.getAxle().pos.y;
         this.minX = null;
@@ -195,7 +198,7 @@ class Field {
             this.v = 0;
             this.agent.field(this);
             this.agent.wheels.setVerts(this.verticies);
-            this.hud.controller.setValue(true);
+            // this.hud.controllerToggle.setValue(true);
             // this.agent.controller = new Controller(this.agent);
             return true;
         }

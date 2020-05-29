@@ -32,9 +32,6 @@ float by;
 float scale;
 float xOffset = 0.0f;
 float yOffset = 0.0f;
-boolean reset = false;
-boolean follow = false;
-boolean pan = false;
 boolean controller = false;
 ControlP5 control;
 ViewMode currentView;
@@ -110,7 +107,7 @@ public void hudListener() {
     if (hud.fieldStarter.isPressed()) {
         field.startField(hud);
     }
-    if (hud.controller.getState()) {
+    if (hud.controllerToggle.getState()) {
         controller = true;
     } else {
         controller = false;
@@ -134,7 +131,9 @@ public void drawView() {
 public void pan() {
     hud.viewButton.setLabel("Follow");
     translate(bx, by);
-    zoom(field.center.x, field.center.y);
+    if (field.complete) {
+        zoom(field.center.x, field.center.y);
+    }
 }
 
 public void follow() {
@@ -182,12 +181,6 @@ public void keyPressed() {
         agent.halt();
     } else if (key == ' ') {
         field.startField(hud);
-    } else if (key == 'c') {
-        if (!reset) {
-            reset = true;
-        } else {
-            reset = false;
-        }
     }
 }
 
@@ -676,6 +669,9 @@ class Field {
         this.hud = hud;
         this.side = hud.sideToggle.getBooleanValue() ? 90 : -90;
         this.hud.fieldStarter.setOn();
+        this.hud.currentView = ViewMode.FOLLOW;
+        this.hud.viewButton.setLock(true);
+        this.hud.viewButton.setLabel("Follow");
         this.startx = this.agent.getAxle().pos.x;
         this.starty = this.agent.getAxle().pos.y;
         this.minX = null;
@@ -827,15 +823,10 @@ class Field {
             this.hud.viewButton.setLock(false);
             this.hud.viewButton.setLabel("Follow");
             this.hud.fieldStarter.setOff();
-            this.hud.resetView.mousePressed();
-            this.hud.resetView.mouseReleased();
-            this.hud.followToggle.setLock(false);
-            this.hud.followToggle.setValue(false);
-            this.hud.resetView.setLock(false);
             this.v = 0;
             this.agent.field(this);
             this.agent.wheels.setVerts(this.verticies);
-            this.hud.controller.setValue(true);
+            // this.hud.controllerToggle.setValue(true);
             // this.agent.controller = new Controller(this.agent);
             return true;
         }
@@ -858,25 +849,29 @@ class HUD {
     PApplet sketch;
     ControlP5 control;
     Field field;
+
     float curHeight;
     int showHeight;
     int hideHeight;
-    boolean vis;
-    Toggle followToggle;
-    Toggle sideToggle;
-    Toggle controller;
-    Button fieldStarter;
-    Button resetView;
-    Button viewButton;
-    Slider speedSlider;
+
     ViewMode currentView;
+    boolean vis;
+
+    Slider speedSlider;
+    Toggle sideToggle;
+    Toggle controllerToggle;
+    Button fieldStarter;
+    Button viewButton;
+    Button saveFieldButton;
+    Button loadFieldButton;
+    Button newFieldButton;
 
 // TODO: Add program restart. Use redraw()
 //      This is not a use case of redraw()
 //
 // TODO: Remove 'Prediction'
 // TODO: Remove 'Reset Program'
-// TODO: Replace 'Vertices', 'Controller (AutoSteer)' with button switches
+// TODO: Replace 'Vertices', 'controllerToggle (AutoSteer)' with button switches
 
     HUD(PApplet sketch, ControlP5 control, Field field) {
         this.sketch = sketch;
@@ -887,20 +882,14 @@ class HUD {
         this.currentView = ViewMode.FOLLOW;
         this.vis = false;
 
-        // View Buttons
-        followToggle = new Toggle(control, "Follow");
-        followToggle.setSize(50, 20);
-        resetView = new Button(control, "reset");
-        resetView.setSize(50, 20);
-
         sideToggle = new Toggle(control, "Outside");
         sideToggle.setSize(50, 20);
         sideToggle.setMode(ControlP5.SWITCH);
 
-        controller = new Toggle(control, "Controller");
-        controller.setSize(50, 20);
-        controller.setMode(ControlP5.SWITCH);
-        controller.setValue(false);
+        controllerToggle = new Toggle(control, "Controller");
+        controllerToggle.setSize(50, 20);
+        controllerToggle.setMode(ControlP5.SWITCH);
+        controllerToggle.setValue(false);
 
         fieldStarter = new Button(control, "Start");
         fieldStarter.setSize(50, 20);
@@ -921,7 +910,37 @@ class HUD {
                     case(ControlP5.ACTION_PRESSED):viewButtonPressed();
                 }
             }
-            });
+        });
+
+        saveFieldButton = new Button(control, "Save");
+        saveFieldButton.setSize(50,20);
+        saveFieldButton.addCallback(new CallbackListener() {
+            public void controlEvent(CallbackEvent e) {
+                switch(e.getAction()) {
+                    case(ControlP5.ACTION_PRESSED):saveButtonPressed();
+                }
+            }
+        });
+
+        loadFieldButton = new Button(control, "Load");
+        loadFieldButton.setSize(50,20);
+        loadFieldButton.addCallback(new CallbackListener() {
+            public void controlEvent(CallbackEvent e) {
+                switch(e.getAction()) {
+                    case(ControlP5.ACTION_PRESSED):loadButtonPressed();
+                }
+            }
+        });
+
+        newFieldButton = new Button(control, "New");
+        newFieldButton.setSize(50,20);
+        newFieldButton.addCallback(new CallbackListener() {
+            public void controlEvent(CallbackEvent e) {
+                switch(e.getAction()) {
+                    case(ControlP5.ACTION_PRESSED):newButtonPressed();
+                }
+            }
+        });
     }
 
     public void render() {
@@ -939,13 +958,14 @@ class HUD {
     }
 
     public void drawControls() {
-        followToggle.setPosition(hudColumn(0), hudRow(3));
-        resetView.setPosition(hudColumn(1), hudRow(3));
-        controller.setPosition(hudColumn(2), hudRow(3));
-        sideToggle.setPosition(hudColumn(3), hudRow(3));
-        fieldStarter.setPosition(hudColumn(4), hudRow(3));
-        speedSlider.setPosition(hudColumn(5), hudRow(0));
+        speedSlider.setPosition(hudColumn(0), hudRow(0));
         viewButton.setPosition(hudColumn(0), hudRow(1));
+        newFieldButton.setPosition(hudColumn(1), hudRow(1));
+        loadFieldButton.setPosition(hudColumn(1), hudRow(2));
+        saveFieldButton.setPosition(hudColumn(1), hudRow(3));
+        sideToggle.setPosition(hudColumn(2), hudRow(1));
+        fieldStarter.setPosition(hudColumn(2), hudRow(2));
+        controllerToggle.setPosition(hudColumn(2), hudRow(3));
     }
 
     public void viewButtonPressed() {
@@ -963,6 +983,18 @@ class HUD {
                 this.currentView = ViewMode.FOLLOW;
                 break;
         }
+    }
+
+    public void newButtonPressed() {
+
+    }
+
+    public void loadButtonPressed() {
+
+    }
+
+    public void saveButtonPressed() {
+
     }
 
     public float hudColumn(float columnNumber) {

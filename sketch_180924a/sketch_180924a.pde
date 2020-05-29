@@ -88,7 +88,7 @@ void hudListener() {
     if (hud.fieldStarter.isPressed()) {
         field.startField(hud);
     }
-    if (hud.controller.getState()) {
+    if (hud.controllerToggle.getState()) {
         controller = true;
     } else {
         controller = false;
@@ -112,7 +112,9 @@ void drawView() {
 void pan() {
     hud.viewButton.setLabel("Follow");
     translate(bx, by);
-    zoom(field.center.x, field.center.y);
+    if (field.complete) {
+        zoom(field.center.x, field.center.y);
+    }
 }
 
 void follow() {

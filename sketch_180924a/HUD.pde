@@ -3,23 +3,29 @@ class HUD {
     PApplet sketch;
     ControlP5 control;
     Field field;
+
     float curHeight;
     int showHeight;
     int hideHeight;
+
+    ViewMode currentView;
     boolean vis;
+
+    Slider speedSlider;
     Toggle sideToggle;
-    Toggle controller;
+    Toggle controllerToggle;
     Button fieldStarter;
     Button viewButton;
-    Slider speedSlider;
-    ViewMode currentView;
+    Button saveFieldButton;
+    Button loadFieldButton;
+    Button newFieldButton;
 
 // TODO: Add program restart. Use redraw()
 //      This is not a use case of redraw()
 //
 // TODO: Remove 'Prediction'
 // TODO: Remove 'Reset Program'
-// TODO: Replace 'Vertices', 'Controller (AutoSteer)' with button switches
+// TODO: Replace 'Vertices', 'controllerToggle (AutoSteer)' with button switches
 
     HUD(PApplet sketch, ControlP5 control, Field field) {
         this.sketch = sketch;
@@ -34,10 +40,10 @@ class HUD {
         sideToggle.setSize(50, 20);
         sideToggle.setMode(ControlP5.SWITCH);
 
-        controller = new Toggle(control, "Controller");
-        controller.setSize(50, 20);
-        controller.setMode(ControlP5.SWITCH);
-        controller.setValue(false);
+        controllerToggle = new Toggle(control, "Controller");
+        controllerToggle.setSize(50, 20);
+        controllerToggle.setMode(ControlP5.SWITCH);
+        controllerToggle.setValue(false);
 
         fieldStarter = new Button(control, "Start");
         fieldStarter.setSize(50, 20);
@@ -58,7 +64,37 @@ class HUD {
                     case(ControlP5.ACTION_PRESSED):viewButtonPressed();
                 }
             }
-            });
+        });
+
+        saveFieldButton = new Button(control, "Save");
+        saveFieldButton.setSize(50,20);
+        saveFieldButton.addCallback(new CallbackListener() {
+            public void controlEvent(CallbackEvent e) {
+                switch(e.getAction()) {
+                    case(ControlP5.ACTION_PRESSED):saveButtonPressed();
+                }
+            }
+        });
+
+        loadFieldButton = new Button(control, "Load");
+        loadFieldButton.setSize(50,20);
+        loadFieldButton.addCallback(new CallbackListener() {
+            public void controlEvent(CallbackEvent e) {
+                switch(e.getAction()) {
+                    case(ControlP5.ACTION_PRESSED):loadButtonPressed();
+                }
+            }
+        });
+
+        newFieldButton = new Button(control, "New");
+        newFieldButton.setSize(50,20);
+        newFieldButton.addCallback(new CallbackListener() {
+            public void controlEvent(CallbackEvent e) {
+                switch(e.getAction()) {
+                    case(ControlP5.ACTION_PRESSED):newButtonPressed();
+                }
+            }
+        });
     }
 
     void render() {
@@ -76,11 +112,14 @@ class HUD {
     }
 
     void drawControls() {
-        controller.setPosition(hudColumn(2), hudRow(3));
-        sideToggle.setPosition(hudColumn(3), hudRow(3));
-        fieldStarter.setPosition(hudColumn(4), hudRow(3));
-        speedSlider.setPosition(hudColumn(5), hudRow(0));
+        speedSlider.setPosition(hudColumn(0), hudRow(0));
         viewButton.setPosition(hudColumn(0), hudRow(1));
+        newFieldButton.setPosition(hudColumn(1), hudRow(1));
+        loadFieldButton.setPosition(hudColumn(1), hudRow(2));
+        saveFieldButton.setPosition(hudColumn(1), hudRow(3));
+        sideToggle.setPosition(hudColumn(2), hudRow(1));
+        fieldStarter.setPosition(hudColumn(2), hudRow(2));
+        controllerToggle.setPosition(hudColumn(2), hudRow(3));
     }
 
     void viewButtonPressed() {
@@ -98,6 +137,18 @@ class HUD {
                 this.currentView = ViewMode.FOLLOW;
                 break;
         }
+    }
+
+    void newButtonPressed() {
+
+    }
+
+    void loadButtonPressed() {
+
+    }
+
+    void saveButtonPressed() {
+
     }
 
     float hudColumn(float columnNumber) {
