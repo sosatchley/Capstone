@@ -57,7 +57,7 @@ public void test() {
     this.shape = createShape();
     this.shape.beginShape();
     this.shape.stroke(112, 143, 250);
-    this.shape.strokeWeight(100);
+    this.shape.strokeWeight(10);
 
 }
 

@@ -1,36 +1,21 @@
-import processing.core.*; 
-import processing.data.*; 
-import processing.event.*; 
-import processing.opengl.*; 
-
-import java.util.HashMap; 
-import java.util.ArrayList; 
-import java.io.File; 
-import java.io.BufferedReader; 
-import java.io.PrintWriter; 
-import java.io.InputStream; 
-import java.io.OutputStream; 
-import java.io.IOException; 
-
-public class test extends PApplet {
-
 PShape shape;
 Boolean running;
 float startx;
 float starty;
 int v;
 
-public void setup() {
+void setup() {
 frameRate(60);
 background(0);
 stroke(255, 0, 0);
 strokeWeight(5);
 fill(92, 249, 126);
-
+// size(1500,1500);
+fullScreen();
 this.running = false;
 }
 
-public void draw() {
+void draw() {
     background(0);
     drawGrid();
     if (this.running) {
@@ -43,11 +28,11 @@ public void draw() {
         rayCast();
     }
 }
-public void mousePressed() {
+void mousePressed() {
     test();
 }
 
-public void test() {
+void test() {
     running = true;
     noFill();
     this.startx = mouseX;
@@ -57,11 +42,11 @@ public void test() {
     this.shape = createShape();
     this.shape.beginShape();
     this.shape.stroke(112, 143, 250);
-    this.shape.strokeWeight(100);
+    this.shape.strokeWeight(10);
 
 }
 
-public void updateShape(float x, float y) {
+void updateShape(float x, float y) {
     if (!fieldComplete(x, y)) {
         this.shape.vertex(x,y);
         this.v++;
@@ -69,7 +54,7 @@ public void updateShape(float x, float y) {
     }
 }
 
-public void drawGrid() {
+void drawGrid() {
     stroke(1, 255, 0);
     strokeWeight(1);
     fill(1, 255, 0);
@@ -83,7 +68,7 @@ public void drawGrid() {
     }
 }
 
-public Boolean fieldComplete(float x, float y) {
+Boolean fieldComplete(float x, float y) {
     if (this.v < 20) {
         return false;
     }
@@ -102,7 +87,7 @@ public Boolean fieldComplete(float x, float y) {
     return false;
 }
 
-public void rayCast() {
+void rayCast() {
     // println(get(mouseX, mouseY));
     stroke(255, 0, 0);
     fill(255, 0, 0);
@@ -141,7 +126,7 @@ public void rayCast() {
     text(rightExt - right, rightExt, mouseY-5);
 }
 
-public int bruteRayY(int start, int targetColor, int direction) {
+int bruteRayY(int start, int targetColor, int direction) {
 
     for (int i = start; i < height; i+=direction) {
         if (get(mouseX, i) != targetColor){
@@ -155,7 +140,7 @@ public int bruteRayY(int start, int targetColor, int direction) {
     return (direction > 0) ? height : 0;
 }
 
-public int bruteRayX(int start, int targetColor, int direction) {
+int bruteRayX(int start, int targetColor, int direction) {
     for (int i = start; i < width; i+=direction) {
         if (get(i, mouseY) != targetColor) {
             if (get(i, mouseY) == -16646400 ||
@@ -166,16 +151,4 @@ public int bruteRayX(int start, int targetColor, int direction) {
         }
     }
     return (direction > 0) ? width : 0;
-}
-
-  public void settings() { 
-size(1500,1500); }
-  static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "test" };
-    if (passedArgs != null) {
-      PApplet.main(concat(appletArgs, passedArgs));
-    } else {
-      PApplet.main(appletArgs);
-    }
-  }
 }

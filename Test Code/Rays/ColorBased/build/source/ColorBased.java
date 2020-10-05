@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class test extends PApplet {
+public class ColorBased extends PApplet {
 
 PShape shape;
 Boolean running;
@@ -26,6 +26,7 @@ background(0);
 stroke(255, 0, 0);
 strokeWeight(5);
 fill(92, 249, 126);
+// size(1500,1500);
 
 this.running = false;
 }
@@ -57,7 +58,7 @@ public void test() {
     this.shape = createShape();
     this.shape.beginShape();
     this.shape.stroke(112, 143, 250);
-    this.shape.strokeWeight(100);
+    this.shape.strokeWeight(10);
 
 }
 
@@ -167,11 +168,10 @@ public int bruteRayX(int start, int targetColor, int direction) {
     }
     return (direction > 0) ? width : 0;
 }
-
   public void settings() { 
-size(1500,1500); }
+fullScreen(); }
   static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "test" };
+    String[] appletArgs = new String[] { "ColorBased" };
     if (passedArgs != null) {
       PApplet.main(concat(appletArgs, passedArgs));
     } else {
