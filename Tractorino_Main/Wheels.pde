@@ -7,7 +7,6 @@ class Wheels {
     PVector vel;
     Agent agent;
     Boolean rolling;
-    ArrayList<Vertex> verts;
 
 // Constructs Wheel Object
     Wheels() {
@@ -54,27 +53,6 @@ class Wheels {
         rotate(this.drawAngle);
         line(0, -3, 0, 3);
         popMatrix();
-    }
-
-    void setVerts(ArrayList<Vertex> verts) {
-        this.verts = verts;
-    }
-
-    Vertex findClosest() {
-        float thisDist;
-        float dist = 0;
-        Vertex closest = null;
-        for (Vertex vert : this.verts) {
-            thisDist = dist(this.pos.x, this.pos.y, vert.x, vert.y);
-            if (thisDist < dist || dist == 0) {
-                if (abs(degrees(atan2(vert.y, vert.x))) < 90) {
-                    closest = vert;
-                    dist = thisDist;
-                }
-            }
-        }
-        this.agent.setDistance(dist);
-        return closest;
     }
 
     void maintain() {

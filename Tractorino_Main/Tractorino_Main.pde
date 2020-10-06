@@ -33,7 +33,7 @@ void setup() {
   scale = 1;
   agent = new Agent();
   field = new Field(agent);
-  hud = new HUD(this.verticalResolution, control, field);
+  hud = new HUD(this.verticalResolution, control);
   state = 0;
   currentView = ViewMode.FOLLOW;
 }
@@ -139,11 +139,7 @@ void reset() {
         translate(bx, by);
         scale = 1;
     } else {
-        if (field.yScale > field.xScale) {
-            scale = field.xScale;
-        } else {
-            scale = field.yScale;
-        }
+        scale = (field.yScale > field.xScale) ? field.xScale : field.yScale;
         bx = (width/2)-field.center.x;
         by = (height/2  )-field.center.y;
         translate(bx, by);

@@ -2,7 +2,6 @@ import controlP5.*;
 class HUD {
     int windowSize;
     ControlP5 control;
-    Field field;
 
     float curHeight;
     int showHeight;
@@ -27,12 +26,11 @@ class HUD {
 // TODO: Remove 'Reset Program'
 // TODO: Replace 'Vertices', 'controllerToggle (AutoSteer)' with button switches
 
-    HUD(int windowSize, ControlP5 control, Field field) {
+    HUD(int windowSize, ControlP5 control) {
         this.windowSize = windowSize;
         this.control = control;
         this.showHeight = windowSize/5;
         this.curHeight = height;
-        this.field = field;
         this.currentView = ViewMode.FOLLOW;
         this.vis = false;
 

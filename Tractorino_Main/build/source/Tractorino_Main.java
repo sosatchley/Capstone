@@ -52,7 +52,7 @@ public void setup() {
   scale = 1;
   agent = new Agent();
   field = new Field(agent);
-  hud = new HUD(this.verticalResolution, control, field);
+  hud = new HUD(this.verticalResolution, control);
   state = 0;
   currentView = ViewMode.FOLLOW;
 }
@@ -158,11 +158,7 @@ public void reset() {
         translate(bx, by);
         scale = 1;
     } else {
-        if (field.yScale > field.xScale) {
-            scale = field.xScale;
-        } else {
-            scale = field.yScale;
-        }
+        scale = (field.yScale > field.xScale) ? field.xScale : field.yScale;
         bx = (width/2)-field.center.x;
         by = (height/2  )-field.center.y;
         translate(bx, by);
@@ -209,8 +205,6 @@ class Agent {
     PVector pos;
     Field field;
     int loopCount;
-    Vertex lastVertex;
-    Vertex closestVertex;
     float dist;
     Controller controller;
 
@@ -228,9 +222,6 @@ class Agent {
 
     public void render() {
         this.wheels.show();
-        if (this.field != null) {
-            setClosestVert();
-        }
         this.axle.show();
         this.machine.show();
         this.cutter.show();
@@ -258,27 +249,6 @@ class Agent {
         this.wheels.rolling = false;
     }
 
-    public void loopCheck() { // Removes verticies 2 loops or more behind most recent vertex
-        int moves;
-        if (this.lastVertex == null) {
-            moves = 0;
-        } else {
-            moves = this.lastVertex.moves;
-        }
-        if (moves > this.loopCount) {
-            this.loopCount = moves;
-            this.field.vertCheck(this.loopCount);
-        }
-    }
-
-    public void setLastVert(Vertex vert) {
-        this.lastVertex = vert;
-    }
-
-    public void setClosestVert() {
-        this.closestVertex = this.wheels.findClosest();
-    }
-
     public void setDistance(float distance) {
         this.dist = distance;
     }
@@ -286,16 +256,6 @@ class Agent {
     public void setCutterAngle(float angle) {
         float cutterAngle = abs(abs(angle) - abs(this.wheels.heading));
         this.cutterAngle = cutterAngle;
-    }
-
-    public float radians(int degrees) {
-        float radians = degrees * PI / 180;
-        return radians;
-    }
-
-    public double degrees(float radians) {
-        double degrees = radians * 180 / PI;
-        return degrees;
     }
 
     public Wheels getWheels() {
@@ -320,51 +280,6 @@ class Agent {
 
     public void field(Field field) {
         this.field = field;
-    }
-
-    public void getAngle() {
-        PVector[] closest = new PVector[50];
-        for (int i = 0; i < field.shape.getVertexCount()-1; i++) {
-            PVector vertex = field.shape.getVertex(i);
-            if (i < 50) {
-                closest[i] = vertex;
-            } else {
-                for (int j = 0; j < 50; j++) {
-                    // println(distance(this.pos, vertex));
-                    // println(distance(this.pos, closest[j]));
-                    // println(distance(this.pos, vertex));
-                    // println(dist(this.pos.x, this.pos.y, vertex.x, vertex.y));
-                    // if (distance(this.pos, vertex) < distance(this.pos, closest[j])) {
-                    if (dist(this.pos.x, this.pos.y, vertex.x, vertex.y) < dist(this.pos.x, this.pos.y, closest[j].x, closest[j].y)) {
-                        closest[j] = vertex;
-                    }
-                }
-            }
-        }
-        double dist = 0;
-        PVector p = new PVector();
-        PVector q = new PVector();
-        for (int i = 0; i < 50; i++) {
-            double thisDist;
-            for(int j = 0; j < 50; j++) {
-                thisDist = distance(closest[i], closest[j]);
-                if (dist == 0) {
-                    dist = thisDist;
-                } else if (dist < thisDist) {
-                    dist = thisDist;
-                    p = closest[i];
-                    q = closest[j];
-                    // println("P: " + coord(p));
-                    // println("Q: " + coord(q));
-                }
-            }
-        }
-        strokeWeight(15);
-        stroke(255,0,0);
-        point(p.x, p.y);
-        point(q.x, q.y);
-        // float angle = atan2(p,q);
-        // return angle;
     }
 }
 class Axle {
@@ -421,7 +336,7 @@ class Controller {
         }
         count++;
         float distClosest = this.agent.dist;
-        float angleClosest = this.agent.closestVertex.angle;
+        float angleClosest = 6;//this.agent.closestVertex.angle;
         float cutterAngle = degrees(this.agent.cutterAngle);
 
         int state = getState(distClosest, angleClosest, cutterAngle);
@@ -558,7 +473,7 @@ class Controller {
                 break;
         }
         float distClosest = this.agent.dist;
-        float angleClosest = this.agent.closestVertex.angle;
+        float angleClosest = 6;//this.agent.closestVertex.angle;
         float cutterAngle = this.agent.cutterAngle;
         return getState(distClosest, angleClosest, cutterAngle);
     }
@@ -637,7 +552,6 @@ class Field {
     Agent agent;
     HUD hud;
 
-    ArrayList<Vertex> verticies;
     PShape shape;
     PShape start;
     PShape cutPath;
@@ -645,51 +559,44 @@ class Field {
     Boolean begun;
     Boolean drawing;
     Boolean complete;
-    Boolean showVerticies;
 
-    int v;
     int side;
     float xScale;
     float yScale;
-    Vertex lastVertex;
 
-    PVector minX;
-    PVector maxX;
-    PVector minY;
-    PVector maxY;
+    float minX;
+    float maxX;
+    float minY;
+    float maxY;
     PVector center;
     float startx;
     float starty;
+    Boolean cursorHasExited;
     float fieldWidth;
     float fieldHeight;
 
     Field(Agent agent) {
         this.agent = agent;
-        this.v = 0;
         this.begun = false;
         this.drawing = false;
         this.complete = false;
     }
 
     public void startField(HUD hud) {
-        this.verticies = new ArrayList<Vertex>();
         this.hud = hud;
-        this.side = hud.sideToggle.getBooleanValue() ? 90 : -90;
         this.hud.fieldStarter.setOn();
         this.hud.currentView = ViewMode.FOLLOW;
         this.hud.viewButton.setLock(true);
         this.hud.viewButton.setLabel("Follow");
-        this.startx = this.agent.getAxle().pos.x;
-        this.starty = this.agent.getAxle().pos.y;
-        this.minX = null;
-        this.maxX = null;
-        this.minY = null;
-        this.maxY = null;
+        this.startx = mouseX;
+        this.starty = mouseY;
+        this.cursorHasExited = false;
+        this.minX = Float.POSITIVE_INFINITY;
+        this.maxX = Float.NEGATIVE_INFINITY;
+        this.minY = Float.POSITIVE_INFINITY;
+        this.maxY = Float.NEGATIVE_INFINITY;
         stroke(255, 0, 0);
         noFill();
-        PVector p = angularDisplacement(this.startx, this.starty, 18, this.agent.getHeading(), -this.side);
-        // this.startx = p.x;
-        // this.starty = p.y;
         this.start = createShape(RECT, this.startx-15,this.starty-15, 30, 30);
         this.shape = createShape();
         this.shape.beginShape();
@@ -706,122 +613,51 @@ class Field {
 
     public void render() {
         if (this.drawing) {
-            float frontx = this.agent.getAxle().pos.x;
-            float fronty = this.agent.getAxle().pos.y;
-            // pushMatrix();
             shape(this.start);
-            // scale(2);
-            // translate(x, y);
-            updateShape(frontx, fronty);
-            // popMatrix();
-        }
-        if (frameCount % 10 == 0) {
-            cut(this.agent.cutter.pos.x, this.agent.cutter.pos.y);
+            updateShape(mouseX, mouseY);
         }
         if (this.shape != null) {
             shape(this.shape);
             shape(this.cutPath);
         }
-        if (this.complete) {
-            this.agent.loopCheck();
-            for (int i = 0; i < this.verticies.size(); i++) {
-                Vertex vertex = this.verticies.get(i);
-                vertex.render();
-            }
-        }
-    }
-
-    public void cut(float x, float y) {
-        this.cutPath.vertex(x, y);
-
-        // float Lx = x + 9 * cos(this.agent.wheels.heading - this.side);
-        // float Ly = y + 9 * sin(this.agent.wheels.heading - this.side);
-        // float Rx= x + 9 * cos(this.agent.wheels.heading + this.side);
-        // float Ry = y + 9 * sin(this.agent.wheels.heading + this.side);
-        //
-        // int count = this.cutPath.getVertexCount();
-        // if (count < 2) {
-        //     this.cutPath.vertex(Lx, Ly);
-        //     this.cutPath.vertex(Rx, Ry);
-        // } else {
-        //     // if ((count/2) % 2 == 0) {
-        //         this.cutPath.vertex(Lx, Ly);
-        //         this.cutPath.vertex(Rx, Ry);
-        //         for (int i = count/2+1; i < count+1; i++) {
-        //             this.cutPath.setVertex(i+2, this.cutPath.getVertex(i));
-        //         }
-        //         this.cutPath.setVertex(count/2+1, Lx, Ly);
-        //         this.cutPath.setVertex(count/2+1, Rx, Ry);
-        //         PVector p = new PVector();
-        //         this.cutPath.getVertex(count/2+1, p);
-        //         stroke(255);
-        //         strokeWeight(15);
-        //         point(p.x, p.y);
-            // } else {
-            //     this.cutPath.vertex(Lx, Ly);
-            //     this.cutPath.vertex(Rx, Ry);
-            //     for (int i = count/2+1; i < count+1; i++) {
-            //         setVertex(i+2, getVertex(i));
-            //     }
-            //     setVertex(count/2+1, Lx, Ly);
-            //     setVertex(count/2+1, Rx, Ry);
-            // }
-        // }
     }
 
     public void updateShape(float x, float y) {
-        // FIXME: Something about where edge of field is drawn in relation to first pass
-        //              Left Wheel? Draw field remaining after first pass?
-        //              Right Wheel? Draw entire field, begin showing coverage during first pass?
         if (!complete(x, y)) {
-            float x1 = x + 9 * cos(this.agent.wheels.heading - this.side);
-            float y1 = y + 9 * sin(this.agent.wheels.heading - this.side);
+            this.shape.vertex(x,y);
+            updateBoundaries(x, y);
+            return;
+        }
+    }
 
-            this.shape.vertex(x1, y1);
-            if (this.verticies.size() == 0) {
-                Vertex vertex = new Vertex(agent, angularDisplacement(this.agent.cutter.pos, 9, this.agent.cutter.angle, -this.side), this.agent.getHeading(), side);
-                this.verticies.add(vertex);
-            } else {//if (frameCount % 2 == 0){
-                Vertex vertex = new Vertex(agent, angularDisplacement(this.agent.cutter.pos, 9, this.agent.cutter.angle, -this.side), this.agent.getHeading(), verticies.get(verticies.size()-1), side);
-                this.verticies.add(vertex);
-            }
-            this.v++;
-            // point(x,y);
+    public void updateBoundaries(float x, float y) {
+        if (this.minX > x) {
+            this.minX = x;
+        }
+        if (this.maxX < x) {
+            this.maxX = x;
+        }
+        if (this.minY > y) {
+            this.minY = y;
+        }
+        if (this.maxY < y) {
+            this.maxY = y;
         }
     }
 
     public Boolean complete(float x, float y) {
-        if (this.v < 200) {
-            return false;
-        }
-        if (( x > this.startx-15 && x < this.startx + 15) && (y > this.starty-15 && y < this.starty + 15)) {
+
+        if (cursorReturnedToStartingSquare(x, y)) {
             this.shape.fill(87, 43, 163, 80);
             this.shape.endShape(CLOSE);
-            for (int i = 0; i < this.shape.getVertexCount()-1; i++) {
-                PVector vertex = this.shape.getVertex(i);
-                // println(coord(vertex));
-                strokeWeight(10);
-                stroke(255, 0, 0);
-                point(vertex.x, vertex.y);
-                if (this.minX == null || this.minX.x > vertex.x) {
-                    this.minX = vertex;
-                }
-                if (this.maxX == null || this.maxX.x < vertex.x) {
-                    this.maxX = vertex;
-                }
-                if (this.minY == null || this.minY.y > vertex.y) {
-                    this.minY = vertex;
-                }
-                if (this.maxY == null || this.maxY.y < vertex.y) {
-                    this.maxY = vertex;
-                }
-            }
+            println(this.shape.getWidth());
             this.drawing = false;
             this.complete = true;
 
-            this.center = new PVector((field.maxX.x+field.minX.x)/2, (field.maxY.y+field.minY.y)/2);
-            this.fieldWidth = this.maxX.x - this.minX.x;
-            this.fieldHeight = this.maxY.y - this.minY.y;
+            this.center = new PVector((this.maxX + this.minX)/2,
+                                      (this.maxY + this.minY)/2);
+            this.fieldWidth = this.maxX - this.minX;
+            this.fieldHeight = this.maxY - this.minY;
             this.xScale = width/this.fieldWidth;
             this.yScale = height/this.fieldHeight;
 
@@ -829,32 +665,37 @@ class Field {
             this.hud.viewButton.setLock(false);
             this.hud.viewButton.setLabel("Follow");
             this.hud.fieldStarter.setOff();
-            this.v = 0;
-            this.agent.field(this);
-            this.agent.wheels.setVerts(this.verticies);
-            // this.hud.controllerToggle.setValue(true);
-            // this.agent.controller = new Controller(this.agent);
             return true;
         }
         return false;
     }
 
-    public void vertCheck(int loopCount) {
-        // println("clear");
-        for (Vertex vertex : this.verticies) {
-            if (loopCount - vertex.moves > 1) {
-                vertex.deprecated = true;
-                vertex = null;
+    public Boolean cursorReturnedToStartingSquare(float x, float y) {
+        if (!cursorHasExited) {
+            if (cursorInStartingSquare(x, y)) {
+                return false;
+            } else {
+                cursorHasExited = true;
+                return false;
+            }
+        } else {
+            if (cursorInStartingSquare(x, y)) {
+                return true;
+            } else {
+                return false;
             }
         }
-        this.agent.wheels.setVerts(this.verticies);
+    }
+
+    public Boolean cursorInStartingSquare(float x, float y) {
+        return ((x > this.startx - 15 && x < this.startx + 15) &&
+                (y > this.starty - 15 && y < this.starty + 15));
     }
 }
 
 class HUD {
     int windowSize;
     ControlP5 control;
-    Field field;
 
     float curHeight;
     int showHeight;
@@ -879,12 +720,11 @@ class HUD {
 // TODO: Remove 'Reset Program'
 // TODO: Replace 'Vertices', 'controllerToggle (AutoSteer)' with button switches
 
-    HUD(int windowSize, ControlP5 control, Field field) {
+    HUD(int windowSize, ControlP5 control) {
         this.windowSize = windowSize;
         this.control = control;
         this.showHeight = windowSize/5;
         this.curHeight = height;
-        this.field = field;
         this.currentView = ViewMode.FOLLOW;
         this.vis = false;
 
@@ -1079,151 +919,6 @@ class Machine {
         return this.angle;
     }
 }
-class Vertex {
-    float x;
-    float y;
-    float angle;
-    Vertex neighbor;
-    Agent agent;
-    int side;
-    int moves;
-    boolean deprecated;
-    // color c;
-
-    Vertex(Agent agent, float x, float y, float angle, int side) {
-        this.agent = agent;
-        this.x = x;
-        this.y = y;
-        this.angle = angle;
-        this.side = side;
-        this.moves = 0;
-        this.deprecated = false;
-    }
-
-    Vertex(Agent agent, PVector pos, float angle, int side) {
-        this.agent = agent;
-        this.x = pos.x;
-        this.y = pos.y;
-        this.angle = angle;
-        this.side = side;
-        this.moves = 0;
-        this.deprecated = false;
-    }
-
-    Vertex(Agent agent, PVector pos, float angle, Vertex neighbor, int side) {
-        this.agent = agent;
-        this.x = pos.x;
-        this.y = pos.y;
-        this.angle = angle;
-        this.neighbor = neighbor;
-        this.side = side;
-        this.moves = 0;
-        this.deprecated = false;
-    }
-
-    Vertex(Vertex oldVertex, PVector pos, float angle, Vertex neighbor) {
-        this.agent = oldVertex.agent;
-        this.x = pos.x;
-        this.y = pos.y;
-        this.angle = angle;
-        this.neighbor = neighbor;
-
-    }
-
-
-    Vertex(Agent agent, float x, float y, float angle, Vertex neighborint, int side) {
-        this.agent = agent;
-        this.x = x;
-        this.y = y;
-        this.angle = angle;
-        this.neighbor = neighbor;
-        this.side = side;
-        this.moves = 0;
-        this.deprecated = false;
-        // this.c = getColor();
-    }
-
-    public void render() {
-        stroke(getColor());
-        strokeWeight(2);
-
-        if (this.deprecated) {
-            noStroke();
-        }
-        if (passed(this.agent.cutter)) {
-            move(this.agent.cutter);
-        }
-        point(x, y);
-    }
-
-    public int getColor() {
-        if (this.neighbor == null) {
-            return color(0, 136, 255);
-        }
-        // FIXME: Make these values less arbitrary, so they can be reactive to changes in vertex interval
-        float diff = calcSlope();
-        if (abs(diff) < .002f) {
-            return color(0, 255, 0);
-        } else if (abs(diff) < .006f) {
-            return color(219, 255, 0);
-        } else if (abs(diff) < .01f) {
-            return color(255, 153, 0);
-        } else if (abs(diff) < .1f) {
-            return color(255, 0, 0);
-        } else {
-            return color(0, 136, 255);
-        }
-    }
-
-    public float calcSlope() {
-        return abs(this.angle - this.neighbor.angle);
-    }
-
-    public void move(Cutter cutter) {
-        this.agent.setLastVert(this);
-        PVector p = angularDisplacement(x, y, 9+passBy(cutter), this.angle, -this.side);
-        this.x = p.x;
-        this.y = p.y;
-        this.angle = cutter.angle;
-        this.moves++;
-    }
-
-    public boolean passed(Cutter cutter) {
-        // FIXME: Passed Vertex function. This is just the worst.
-        // pushMatrix();
-        // PVector p = angularDisplacement(this.x, this.y, 10, this.angle, -this.side);
-        // float angle = degrees(this.angle);
-        // int mult = (angle < 0 || angle > 90) ? -1 : 1;
-        // float rot;
-        // if (abs(angle) > 90) {
-        //     rot = (angle % 90) * mult;
-        // } else {
-        //     rot = 90 - abs(angle) * mult;
-        // }
-        // rotate(rot);
-        // if (abs(degrees(this.angle)) > 90) {
-            if (passBy(cutter) < 9) {
-                // popMatrix();
-                return true;
-            }
-            // popMatrix();
-            return false;
-        // } else if (abs(degrees(this.angle)) < 90) {
-        //     if ((this.x == cutter.pos.x) && (passBy(cutter) < 20)) {
-        //         popMatrix();
-        //         return true;
-        //     }
-        //     popMatrix();
-        //     return false;
-        // }
-        // popMatrix();
-        // return false;
-    }
-
-    public float passBy(Cutter cutter) {
-        return dist(cutter.pos.x, cutter.pos.y, this.x, this.y);
-    }
-}
 class Wheels {
     float steeringAngle;
     float drawAngle;
@@ -1233,7 +928,6 @@ class Wheels {
     PVector vel;
     Agent agent;
     Boolean rolling;
-    ArrayList<Vertex> verts;
 
 // Constructs Wheel Object
     Wheels() {
@@ -1280,27 +974,6 @@ class Wheels {
         rotate(this.drawAngle);
         line(0, -3, 0, 3);
         popMatrix();
-    }
-
-    public void setVerts(ArrayList<Vertex> verts) {
-        this.verts = verts;
-    }
-
-    public Vertex findClosest() {
-        float thisDist;
-        float dist = 0;
-        Vertex closest = null;
-        for (Vertex vert : this.verts) {
-            thisDist = dist(this.pos.x, this.pos.y, vert.x, vert.y);
-            if (thisDist < dist || dist == 0) {
-                if (abs(degrees(atan2(vert.y, vert.x))) < 90) {
-                    closest = vert;
-                    dist = thisDist;
-                }
-            }
-        }
-        this.agent.setDistance(dist);
-        return closest;
     }
 
     public void maintain() {

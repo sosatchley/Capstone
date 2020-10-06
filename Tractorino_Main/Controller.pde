@@ -16,7 +16,7 @@ class Controller {
         }
         count++;
         float distClosest = this.agent.dist;
-        float angleClosest = this.agent.closestVertex.angle;
+        float angleClosest = 6;//this.agent.closestVertex.angle;
         float cutterAngle = degrees(this.agent.cutterAngle);
 
         int state = getState(distClosest, angleClosest, cutterAngle);
@@ -153,7 +153,7 @@ class Controller {
                 break;
         }
         float distClosest = this.agent.dist;
-        float angleClosest = this.agent.closestVertex.angle;
+        float angleClosest = 6;//this.agent.closestVertex.angle;
         float cutterAngle = this.agent.cutterAngle;
         return getState(distClosest, angleClosest, cutterAngle);
     }
