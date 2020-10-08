@@ -32,7 +32,6 @@ void setup() {
   by = 0;
   scale = 1;
   agent = new Agent();
-  field = new Field(agent);
   hud = new HUD(this.verticalResolution, control);
   state = 0;
   currentView = ViewMode.FOLLOW;
@@ -45,7 +44,7 @@ void draw() {
     pushMatrix();
     // stateListener();
     drawView();
-    if (field.begun) {
+    if (field != null) {
         field.render();
     }
     agent.render();
@@ -66,12 +65,22 @@ void mouseListener() {
 }
 
 void mousePressed() {
+    if (this.field == null) {
+        this.field = new Field(mouseX, mouseY);
+        hud.currentView = ViewMode.FOLLOW;
+        return;
+    }
   xOffset = mouseX-bx;
   yOffset = mouseY-by;
 }
 
 void mouseDragged() {
-    if (!hud.vis){
+    if (this.field == null) {
+        this.field = new Field(mouseX, mouseY);
+        hud.currentView = ViewMode.FOLLOW;
+    } else if (this.field.drawing) {
+        return;
+    } else if (!hud.vis) {
         hud.currentView = ViewMode.PAN;
         bx = mouseX-xOffset;
         by = mouseY-yOffset;
@@ -92,7 +101,6 @@ void mouseWheel(MouseEvent event) {
 void hudListener() {
     agent.wheels.speedMult = hud.speedSlider.getValue();
     if (hud.fieldStarter.isPressed()) {
-        field.startField(hud);
     }
     if (hud.controllerToggle.getState()) {
         controller = true;
@@ -102,6 +110,7 @@ void hudListener() {
 }
 
 void drawView() {
+    println(hud.currentView);
     switch(hud.currentView) {
         case PAN :
             pan();
@@ -118,7 +127,7 @@ void drawView() {
 void pan() {
     hud.viewButton.setLabel("Follow");
     translate(bx, by);
-    if (field.complete) {
+    if (field != null && !field.drawing) {
         zoom(field.center.x, field.center.y);
     }
 }
@@ -133,7 +142,7 @@ void follow() {
 }
 
 void reset() {
-    if (!field.begun) {
+    if (field == null) {
         bx = 0;
         by = 0;
         translate(bx, by);
@@ -163,7 +172,8 @@ void keyPressed() {
     } else if (keyCode == DOWN) {
         agent.halt();
     } else if (key == ' ') {
-        field.startField(hud);
+        field = new Field(mouseX, mouseY);
+        hud.currentView = ViewMode.FOLLOW;
     }
 }
 

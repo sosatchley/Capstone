@@ -5,61 +5,35 @@ class Field {
 
     PShape shape;
     PShape start;
-    PShape cutPath;
 
-    Boolean begun;
+    float startx;
+    float starty;
     Boolean drawing;
-    Boolean complete;
-
-    int side;
-    float xScale;
-    float yScale;
+    Boolean cursorHasExited;
 
     float minX;
     float maxX;
     float minY;
     float maxY;
+    float xScale;
+    float yScale;
     PVector center;
-    float startx;
-    float starty;
-    Boolean cursorHasExited;
     float fieldWidth;
     float fieldHeight;
 
-    Field(Agent agent) {
-        this.agent = agent;
-        this.begun = false;
-        this.drawing = false;
-        this.complete = false;
-    }
-
-    void startField(HUD hud) {
-        this.hud = hud;
-        this.hud.fieldStarter.setOn();
-        this.hud.currentView = ViewMode.FOLLOW;
-        this.hud.viewButton.setLock(true);
-        this.hud.viewButton.setLabel("Follow");
-        this.startx = mouseX;
-        this.starty = mouseY;
-        this.cursorHasExited = false;
-        this.minX = Float.POSITIVE_INFINITY;
-        this.maxX = Float.NEGATIVE_INFINITY;
-        this.minY = Float.POSITIVE_INFINITY;
-        this.maxY = Float.NEGATIVE_INFINITY;
-        stroke(255, 0, 0);
-        noFill();
-        this.start = createShape(RECT, this.startx-15,this.starty-15, 30, 30);
-        this.shape = createShape();
-        this.shape.beginShape();
-        this.cutPath = createShape();
-        this.cutPath.beginShape();
-        this.shape.stroke(112, 143, 250);
-        this.cutPath.stroke(255,50);
-        this.cutPath.strokeWeight(18);
+    Field(float x, float y) {
         this.drawing = true;
-        this.complete = false;
-        this.begun = true;
-
+        this.cursorHasExited = false;
+        this.startx = x;
+        this.starty = y;
+        setupBoundaries();
+        setupStartSquare();
+        setupFieldShape();
+        // TODO Move path funcitonality to Cutter?
+        // this.cutPath = createShape();
+        // this.cutPath.beginShape();
+        // this.cutPath.stroke(255,50);
+        // this.cutPath.strokeWeight(18);
     }
 
     void render() {
@@ -69,15 +43,13 @@ class Field {
         }
         if (this.shape != null) {
             shape(this.shape);
-            shape(this.cutPath);
         }
     }
 
     void updateShape(float x, float y) {
         if (!complete(x, y)) {
-            this.shape.vertex(x,y);
+            this.shape.vertex(x, y);
             updateBoundaries(x, y);
-            return;
         }
     }
 
@@ -96,29 +68,54 @@ class Field {
         }
     }
 
+    void setupBoundaries() {
+        this.minX = Float.POSITIVE_INFINITY;
+        this.maxX = Float.NEGATIVE_INFINITY;
+        this.minY = Float.POSITIVE_INFINITY;
+        this.maxY = Float.NEGATIVE_INFINITY;
+    }
+
     Boolean complete(float x, float y) {
-
         if (cursorReturnedToStartingSquare(x, y)) {
-            this.shape.fill(87, 43, 163, 80);
-            this.shape.endShape(CLOSE);
-            println(this.shape.getWidth());
-            this.drawing = false;
-            this.complete = true;
-
-            this.center = new PVector((this.maxX + this.minX)/2,
-                                      (this.maxY + this.minY)/2);
-            this.fieldWidth = this.maxX - this.minX;
-            this.fieldHeight = this.maxY - this.minY;
-            this.xScale = width/this.fieldWidth;
-            this.yScale = height/this.fieldHeight;
-
-            this.hud.currentView = ViewMode.CENTER;
-            this.hud.viewButton.setLock(false);
-            this.hud.viewButton.setLabel("Follow");
-            this.hud.fieldStarter.setOff();
+            closeFieldShape();
+            setGeometry();
             return true;
         }
         return false;
+    }
+
+    void closeFieldShape() {
+        this.drawing = false;
+        this.shape.fill(87, 43, 163, 80);
+        this.shape.endShape(CLOSE);
+    }
+
+    void setupFieldShape() {
+        this.shape = createShape();
+        this.shape.beginShape();
+        this.shape.noFill();
+        this.shape.stroke(112, 143, 250);
+    }
+
+    void setGeometry() {
+        this.center = new PVector((this.maxX + this.minX)/2,
+                                  (this.maxY + this.minY)/2);
+        this.fieldWidth = this.maxX - this.minX;
+        this.fieldHeight = this.maxY - this.minY;
+        this.xScale = width/this.fieldWidth;
+        this.yScale = height/this.fieldHeight;
+    }
+
+    void setupStartSquare() {
+        this.start = createShape();
+        this.start.beginShape();
+        this.start.stroke(255, 0, 0);
+        this.start.noFill();
+        this.start.vertex(this.startx-15, this.starty-15);
+        this.start.vertex(this.startx+15, this.starty-15);
+        this.start.vertex(this.startx+15, this.starty+15);
+        this.start.vertex(this.startx-15, this.starty+15);
+        this.start.endShape(CLOSE);
     }
 
     Boolean cursorReturnedToStartingSquare(float x, float y) {
