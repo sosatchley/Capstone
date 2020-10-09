@@ -57,30 +57,17 @@ public void setup() {
 }
 
 public void draw() {
-    mouseListener();
-    hudListener();
+    // hudListener();
     background(0);
     pushMatrix();
     // stateListener();
-    drawView();
+    // drawView();
     if (field != null) {
         field.render();
     }
     agent.render();
-    if (controller) {
-        agent.controller.control();
-    }
     popMatrix();
     hud.render();
-}
-
-public void mouseListener() {
-    if (mouseY > (this.verticalResolution/10) * 9) {
-        hud.show();
-    }
-    else if (mouseY < (this.verticalResolution/10) * 7) {
-        hud.hide();
-    }
 }
 
 public void mousePressed() {
@@ -118,14 +105,14 @@ public void mouseWheel(MouseEvent event) {
 }
 
 public void hudListener() {
-    agent.wheels.speedMult = hud.speedSlider.getValue();
-    if (hud.fieldStarter.isPressed()) {
-    }
-    if (hud.controllerToggle.getState()) {
-        controller = true;
-    } else {
-        controller = false;
-    }
+    // agent.wheels.speedMult = hud.speedSlider.getValue();
+    // if (hud.fieldStarter.isPressed()) {
+    // }
+    // if (hud.controllerToggle.getState()) {
+    //     controller = true;
+    // } else {
+    //     controller = false;
+    // }
 }
 
 public void drawView() {
@@ -144,11 +131,11 @@ public void drawView() {
 }
 
 public void pan() {
-    hud.viewButton.setLabel("Follow");
-    translate(bx, by);
-    if (field != null && !field.drawing) {
-        zoom(field.center.x, field.center.y);
-    }
+    // hud.viewButton.setLabel("Follow");
+    // translate(bx, by);
+    // if (field != null && !field.drawing) {
+    //     zoom(field.center.x, field.center.y);
+    // }
 }
 
 public void follow() {
@@ -327,6 +314,79 @@ class Axle {
         this.pos.y = this.follow.y - sin(this.angle *20);
     }
 
+}
+class ControlPanel {
+    ControlP5 cp5;
+    HudView view;
+    int windowSize;
+    int showHeight;
+    float curHeight;
+
+    ControlPanel(ControlP5 cp5, int windowSize) {
+        this.cp5 = cp5;
+        this.windowSize = windowSize;
+        this.showHeight = windowSize/5;
+        this.curHeight = height;
+    }
+
+    public void render() {
+        mouseEvent();
+        pushMatrix();
+        translate(0, this.curHeight);
+        drawPanel();
+        popMatrix();
+    }
+
+    public void setView(ControlPanelLayout layout) {
+        println("doin the view");
+        this.view = pickCanvas(layout);
+    }
+
+    public HudView pickCanvas(ControlPanelLayout layout) {
+        switch(layout) {
+            case DRAW_OR_LOAD:
+                return new HudView(0, this.curHeight);
+            default:
+                return null;
+        }
+    }
+
+    public void drawPanel() {
+        fill(255, 100);
+        stroke(27, 196, 245);
+        rect(0, 0, width-1, this.showHeight+10, 10);
+    }
+
+    public void keyPressed() {
+        if (key == '1') {
+            setView(ControlPanelLayout.DRAW_OR_LOAD);
+        }
+    }
+
+    public void show() {
+        this.curHeight = lerp(this.curHeight, height-this.showHeight, 0.2f);
+        if (this.view == null) {
+            setView(ControlPanelLayout.DRAW_OR_LOAD);
+        }
+    }
+
+    public void hide() {
+        this.curHeight = lerp(this.curHeight, height+1, 0.1f);
+    }
+
+    public void mouseEvent() {
+        if (mouseY > (this.windowSize/10) * 9) {
+            show();
+        }
+        else if (mouseY < (this.windowSize/10) * 7) {
+            hide();
+        }
+    }
+
+
+}
+interface ControlView {
+    
 }
 class Controller {
     Agent agent;
@@ -703,6 +763,7 @@ class Field {
 class HUD {
     int windowSize;
     ControlP5 control;
+    ControlPanel panel;
 
     float curHeight;
     int showHeight;
@@ -711,143 +772,46 @@ class HUD {
     ViewMode currentView;
     boolean vis;
 
-    Slider speedSlider;
-    Toggle sideToggle;
-    Toggle controllerToggle;
-    Button fieldStarter;
-    Button viewButton;
-    Button saveFieldButton;
-    Button loadFieldButton;
-    Button newFieldButton;
-
-// TODO: Add program restart. Use redraw()
-//      This is not a use case of redraw()
-//
-// TODO: Remove 'Prediction'
-// TODO: Remove 'Reset Program'
-// TODO: Replace 'Vertices', 'controllerToggle (AutoSteer)' with button switches
-
     HUD(int windowSize, ControlP5 control) {
         this.windowSize = windowSize;
         this.control = control;
+        this.panel = new ControlPanel(control, windowSize);
         this.showHeight = windowSize/5;
         this.curHeight = height;
         this.currentView = ViewMode.FOLLOW;
         this.vis = false;
-
-        int controlWidth = showHeight/4;
-        int controlHeight = showHeight/10;
-        ControlFont controlFont = new ControlFont(createFont("Arial",controlHeight/2));
-
-        sideToggle = new Toggle(control, "Outside");
-        sideToggle.setSize(controlWidth, controlHeight);
-        sideToggle.setMode(ControlP5.SWITCH);
-        sideToggle.setFont(controlFont);
-
-        controllerToggle = new Toggle(control, "Controller");
-        controllerToggle.setSize(controlWidth, controlHeight);
-        controllerToggle.setMode(ControlP5.SWITCH);
-        controllerToggle.setValue(false);
-        controllerToggle.setFont(controlFont);
-
-        fieldStarter = new Button(control, "Start");
-        fieldStarter.setSize(controlWidth, controlHeight);
-        fieldStarter.setSwitch(true);
-        fieldStarter.setOff();
-        fieldStarter.setFont(controlFont);
-
-        speedSlider = new Slider(control, "Speed");
-        speedSlider.setSize(showHeight, controlHeight/2);
-        speedSlider.setMin(0.5f);
-        speedSlider.setMax(3.0f);
-        speedSlider.setFont(controlFont);
-
-        viewButton = new Button(control, "Center");
-        viewButton.setSize(controlWidth,controlHeight);
-        viewButton.setLock(true);
-        viewButton.setFont(controlFont);
-        viewButton.addCallback(new CallbackListener() {
-            public void controlEvent(CallbackEvent e) {
-                switch(e.getAction()) {
-                    case(ControlP5.ACTION_PRESSED):viewButtonPressed();
-                }
-            }
-        });
-
-        saveFieldButton = new Button(control, "Save");
-        saveFieldButton.setSize(controlWidth,controlHeight);
-        saveFieldButton.setFont(controlFont);
-        saveFieldButton.addCallback(new CallbackListener() {
-            public void controlEvent(CallbackEvent e) {
-                switch(e.getAction()) {
-                    case(ControlP5.ACTION_PRESSED):saveButtonPressed();
-                }
-            }
-        });
-
-        loadFieldButton = new Button(control, "Load");
-        loadFieldButton.setSize(controlWidth,controlHeight);
-        loadFieldButton.setFont(controlFont);
-        loadFieldButton.addCallback(new CallbackListener() {
-            public void controlEvent(CallbackEvent e) {
-                switch(e.getAction()) {
-                    case(ControlP5.ACTION_PRESSED):loadButtonPressed();
-                }
-            }
-        });
-
-        newFieldButton = new Button(control, "New");
-        newFieldButton.setSize(controlWidth,controlHeight);
-        newFieldButton.setFont(controlFont);
-        newFieldButton.addCallback(new CallbackListener() {
-            public void controlEvent(CallbackEvent e) {
-                switch(e.getAction()) {
-                    case(ControlP5.ACTION_PRESSED):newButtonPressed();
-                }
-            }
-        });
     }
 
     public void render() {
-        pushMatrix();
-        translate(0, this.curHeight);
-        drawPanel();
-        drawControls();
-        popMatrix();
-    }
-
-    public void drawPanel() {
-        fill(255, 100);
-        stroke(27, 196, 245);
-        rect(0, 0, width-1, showHeight+10, 10);
+        panel.render();
     }
 
     public void drawControls() {
-        speedSlider.setPosition(hudColumn(0), hudRow(0));
-        viewButton.setPosition(hudColumn(0), hudRow(1));
-        newFieldButton.setPosition(hudColumn(1), hudRow(1));
-        loadFieldButton.setPosition(hudColumn(1), hudRow(2));
-        saveFieldButton.setPosition(hudColumn(1), hudRow(3));
-        sideToggle.setPosition(hudColumn(2), hudRow(1));
-        fieldStarter.setPosition(hudColumn(2), hudRow(2));
-        controllerToggle.setPosition(hudColumn(2), hudRow(3));
+        // speedSlider.setPosition(hudColumn(0), hudRow(0));
+        // viewButton.setPosition(hudColumn(0), hudRow(1));
+        // newFieldButton.setPosition(hudColumn(1), hudRow(1));
+        // loadFieldButton.setPosition(hudColumn(1), hudRow(2));
+        // saveFieldButton.setPosition(hudColumn(1), hudRow(3));
+        // sideToggle.setPosition(hudColumn(2), hudRow(1));
+        // fieldStarter.setPosition(hudColumn(2), hudRow(2));
+        // controllerToggle.setPosition(hudColumn(2), hudRow(3));
     }
 
     public void viewButtonPressed() {
-        switch(this.currentView) {
-            case FOLLOW :
-                viewButton.setLabel("Follow");
-                this.currentView = ViewMode.CENTER;
-                break;
-            case CENTER :
-                viewButton.setLabel("Center");
-                this.currentView = ViewMode.FOLLOW;
-                break;
-            case PAN :
-                viewButton.setLabel("Center");
-                this.currentView = ViewMode.FOLLOW;
-                break;
-        }
+        // switch(this.currentView) {
+        //     case FOLLOW :
+        //         viewButton.setLabel("Follow");
+        //         this.currentView = ViewMode.CENTER;
+        //         break;
+        //     case CENTER :
+        //         viewButton.setLabel("Center");
+        //         this.currentView = ViewMode.FOLLOW;
+        //         break;
+        //     case PAN :
+        //         viewButton.setLabel("Center");
+        //         this.currentView = ViewMode.FOLLOW;
+        //         break;
+        // }
     }
 
     public void newButtonPressed() {
@@ -862,6 +826,19 @@ class HUD {
 
     }
 
+    public void show() {
+        this.vis = true;
+        this.curHeight = lerp(this.curHeight, height-this.showHeight, 0.2f);
+        if (this.panel.view == null) {
+            panel.setView(ControlPanelLayout.DRAW_OR_LOAD);
+        }
+    }
+
+    public void hide() {
+        this.vis = false;
+        this.curHeight = lerp(this.curHeight, height+1, 0.1f);
+    }
+
     public float hudColumn(float columnNumber) {
         float xPosition = ((this.windowSize/100) + (columnNumber * (this.windowSize/10)));
         return xPosition;
@@ -872,17 +849,34 @@ class HUD {
         return yPosition;
     }
 
-    public void show() {
-        this.vis = true;
-        this.curHeight = lerp(this.curHeight, height-this.showHeight, 0.2f);
-    }
+}
+class HudView {
 
-    public void hide() {
-        this.vis = false;
-        this.curHeight = lerp(this.curHeight, height+1, 0.1f);
-    }
+  Button fieldStarter;
+  float x;
+  public float y;
 
+  HudView(float x, float y) {
+      this.x = x;
+      this.y = y;
+  }
 
+  public void setup(PGraphics p) {
+      fieldStarter = new Button(control, "Start");
+      fieldStarter.setSize(200, 200);
+      fieldStarter.setSwitch(true);
+      fieldStarter.setOff();
+  }
+  public void draw(PGraphics p) {
+      pushMatrix();
+      translate(this.x, this.y);
+      fieldStarter.setPosition(0,0);
+      popMatrix();
+  }
+
+  public void move(float y) {
+      this.y = y;
+  }
 }
 class Machine {
       PVector pos;
@@ -926,6 +920,106 @@ class Machine {
         return this.angle;
     }
 }
+// class TestView implements HudView {
+//     Slider speedSlider;
+//     Toggle sideToggle;
+//     Toggle controllerToggle;
+//     Button fieldStarter;
+//     Button viewButton;
+//     Button saveFieldButton;
+//     Button loadFieldButton;
+//     Button newFieldButton;
+//
+//
+//     TestView() {
+//         this.windowSize = windowSize;
+//         this.control = control;
+//         this.showHeight = windowSize/5;
+//         this.curHeight = height;
+//         this.currentView = ViewMode.FOLLOW;
+//         this.vis = false;
+//
+//         int controlWidth = showHeight/4;
+//         int controlHeight = showHeight/10;
+//         ControlFont controlFont = new ControlFont(createFont("Arial",controlHeight/2));
+//
+//         sideToggle = new Toggle(control, "Outside");
+//         sideToggle.setSize(controlWidth, controlHeight);
+//         sideToggle.setMode(ControlP5.SWITCH);
+//         sideToggle.setFont(controlFont);
+//
+//         controllerToggle = new Toggle(control, "Controller");
+//         controllerToggle.setSize(controlWidth, controlHeight);
+//         controllerToggle.setMode(ControlP5.SWITCH);
+//         controllerToggle.setValue(false);
+//         controllerToggle.setFont(controlFont);
+//
+//         fieldStarter = new Button(control, "Start");
+//         fieldStarter.setSize(controlWidth, controlHeight);
+//         fieldStarter.setSwitch(true);
+//         fieldStarter.setOff();
+//         fieldStarter.setFont(controlFont);
+//
+//         speedSlider = new Slider(control, "Speed");
+//         speedSlider.setSize(showHeight, controlHeight/2);
+//         speedSlider.setMin(0.5);
+//         speedSlider.setMax(3.0);
+//         speedSlider.setFont(controlFont);
+//
+//         viewButton = new Button(control, "Center");
+//         viewButton.setSize(controlWidth,controlHeight);
+//         viewButton.setLock(true);
+//         viewButton.setFont(controlFont);
+//         viewButton.addCallback(new CallbackListener() {
+//             public void controlEvent(CallbackEvent e) {
+//                 switch(e.getAction()) {
+//                     case(ControlP5.ACTION_PRESSED):viewButtonPressed();
+//                 }
+//             }
+//         });
+//
+//         saveFieldButton = new Button(control, "Save");
+//         saveFieldButton.setSize(controlWidth,controlHeight);
+//         saveFieldButton.setFont(controlFont);
+//         saveFieldButton.addCallback(new CallbackListener() {
+//             public void controlEvent(CallbackEvent e) {
+//                 switch(e.getAction()) {
+//                     case(ControlP5.ACTION_PRESSED):saveButtonPressed();
+//                 }
+//             }
+//         });
+//
+//         loadFieldButton = new Button(control, "Load");
+//         loadFieldButton.setSize(controlWidth,controlHeight);
+//         loadFieldButton.setFont(controlFont);
+//         loadFieldButton.addCallback(new CallbackListener() {
+//             public void controlEvent(CallbackEvent e) {
+//                 switch(e.getAction()) {
+//                     case(ControlP5.ACTION_PRESSED):loadButtonPressed();
+//                 }
+//             }
+//         });
+//
+//         newFieldButton = new Button(control, "New");
+//         newFieldButton.setSize(controlWidth,controlHeight);
+//         newFieldButton.setFont(controlFont);
+//         newFieldButton.addCallback(new CallbackListener() {
+//             public void controlEvent(CallbackEvent e) {
+//                 switch(e.getAction()) {
+//                     case(ControlP5.ACTION_PRESSED):newButtonPressed();
+//                 }
+//             }
+//         });
+//     }
+//
+//     void display() {
+//
+//     }
+//
+//     void initialize() {
+//
+//     }
+// }
 class Wheels {
     float steeringAngle;
     float drawAngle;

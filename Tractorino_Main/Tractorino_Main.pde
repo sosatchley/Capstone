@@ -38,30 +38,17 @@ void setup() {
 }
 
 void draw() {
-    mouseListener();
-    hudListener();
+    // hudListener();
     background(0);
     pushMatrix();
     // stateListener();
-    drawView();
+    // drawView();
     if (field != null) {
         field.render();
     }
     agent.render();
-    if (controller) {
-        agent.controller.control();
-    }
     popMatrix();
     hud.render();
-}
-
-void mouseListener() {
-    if (mouseY > (this.verticalResolution/10) * 9) {
-        hud.show();
-    }
-    else if (mouseY < (this.verticalResolution/10) * 7) {
-        hud.hide();
-    }
 }
 
 void mousePressed() {
@@ -99,14 +86,14 @@ void mouseWheel(MouseEvent event) {
 }
 
 void hudListener() {
-    agent.wheels.speedMult = hud.speedSlider.getValue();
-    if (hud.fieldStarter.isPressed()) {
-    }
-    if (hud.controllerToggle.getState()) {
-        controller = true;
-    } else {
-        controller = false;
-    }
+    // agent.wheels.speedMult = hud.speedSlider.getValue();
+    // if (hud.fieldStarter.isPressed()) {
+    // }
+    // if (hud.controllerToggle.getState()) {
+    //     controller = true;
+    // } else {
+    //     controller = false;
+    // }
 }
 
 void drawView() {
@@ -125,11 +112,11 @@ void drawView() {
 }
 
 void pan() {
-    hud.viewButton.setLabel("Follow");
-    translate(bx, by);
-    if (field != null && !field.drawing) {
-        zoom(field.center.x, field.center.y);
-    }
+    // hud.viewButton.setLabel("Follow");
+    // translate(bx, by);
+    // if (field != null && !field.drawing) {
+    //     zoom(field.center.x, field.center.y);
+    // }
 }
 
 void follow() {
