@@ -1,3 +1,4 @@
 enum ControlPanelLayout {
-  DRAW_OR_LOAD
+  DRAW_OR_LOAD,
+  FIELD_DRAWING
 }

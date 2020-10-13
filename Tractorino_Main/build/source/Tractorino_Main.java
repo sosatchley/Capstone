@@ -317,7 +317,7 @@ class Axle {
 }
 class ControlPanel {
     ControlP5 cp5;
-    HudView view;
+    ControlView view;
     int windowSize;
     int showHeight;
     float curHeight;
@@ -331,6 +331,7 @@ class ControlPanel {
 
     public void render() {
         mouseEvent();
+        keyPressed();
         pushMatrix();
         translate(0, this.curHeight);
         drawPanel();
@@ -341,14 +342,16 @@ class ControlPanel {
     }
 
     public void setView(ControlPanelLayout layout) {
-        println("doin the view");
         this.view = pickCanvas(layout);
+        this.view.setControlPanel(this);
     }
 
-    public HudView pickCanvas(ControlPanelLayout layout) {
+    public ControlView pickCanvas(ControlPanelLayout layout) {
         switch(layout) {
             case DRAW_OR_LOAD:
-                return new HudView(this.windowSize);
+                return new StartingControls(this.windowSize);
+            case FIELD_DRAWING:
+                return new DrawingControls(this.windowSize);
             default:
                 return null;
         }
@@ -361,8 +364,12 @@ class ControlPanel {
     }
 
     public void keyPressed() {
-        if (key == '1') {
+        if (keyCode == DOWN) {
+            println("View 1");
             setView(ControlPanelLayout.DRAW_OR_LOAD);
+        } else if (keyCode == UP) {
+            println("View 2");
+            setView(ControlPanelLayout.FIELD_DRAWING);
         }
     }
 
@@ -389,7 +396,16 @@ class ControlPanel {
 
 }
 interface ControlView {
-    
+    // int windowSize;
+    // LayoutGrid layoutGrid;
+
+    public void render(float verticalPosition);
+
+    public void drawControls(float verticalPosition);
+
+    public ControlPanel getControlPanel();
+
+    public void setControlPanel(ControlPanel cp);
 }
 class Controller {
     Agent agent;
@@ -618,6 +634,56 @@ class Cutter {
     public void changePos() {
         this.pos.x = this.follow.x - cos(this.angle) * 16;
         this.pos.y = this.follow.y - sin(this.angle) * 16;
+    }
+}
+class DrawingControls implements ControlView{
+    int windowSize;
+    LayoutGrid layoutGrid;
+
+    ControlPanel controlPanel;
+
+    Button uiDrawButton;
+    Button uiLoadButton;
+
+
+    DrawingControls(int windowSize) {
+        this.windowSize = windowSize;
+        this.layoutGrid = new LayoutGrid(this.windowSize, 2, 1);
+
+        uiDrawButton = new Button(control, "Draw")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.SMALL),
+                         layoutGrid.getControlHeight(ButtonSize.SMALL))
+                .setSwitch(true)
+                .setOff();
+
+        uiLoadButton = new Button(control, "Load")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.SMALL),
+                         layoutGrid.getControlHeight(ButtonSize.SMALL))
+                .setSwitch(true)
+                .setOff();
+    }
+
+
+    public void render(float verticalPosition) {
+        drawControls(verticalPosition);
+
+    }
+
+    public void drawControls(float verticalPosition) {
+        PVector drawButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.SMALL);
+        PVector loadButtonPos = layoutGrid.getCoords(1, 0, ButtonSize.SMALL);
+        uiDrawButton.setPosition(drawButtonPos.x,
+                                 drawButtonPos.y + verticalPosition);
+        uiLoadButton.setPosition(loadButtonPos.x,
+                                 loadButtonPos.y + verticalPosition);
+    }
+
+    public ControlPanel getControlPanel() {
+        return this.controlPanel;
+    }
+
+    public void setControlPanel(ControlPanel cp) {
+        this.controlPanel = cp;
     }
 }
 
@@ -853,35 +919,94 @@ class HUD {
     }
 
 }
-class HudView {
+class LayoutGrid {
     int windowSize;
+    float numberOfColumns;
+    float numberOfRows;
 
-    Button uiDrawButton;
-    Button uiLoadButton;
-
-    HudView(int windowSize) {
+    LayoutGrid(int windowSize, int cols, int rows) {
         this.windowSize = windowSize;
-
-        uiDrawButton = new Button(control, "Draw")
-                            .setSize(150, 150)
-                            .setSwitch(true)
-                            .setOff();
-
-        uiLoadButton = new Button(control, "Load")
-                            .setSize(150, 150)
-                            .setSwitch(true)
-                            .setOff();
+        this.numberOfColumns = cols;
+        this.numberOfRows = rows;
     }
 
-
-    public void render(float verticalPosition) {
-        drawControls(verticalPosition);
-
+    public PVector getCoords(int columnNumber, int rowNumber, ButtonSize buttonSize) {
+        float horizontalSpacing = getControlWidth(buttonSize) / 2;
+        float verticalSpacing = getControlHeight(buttonSize) / 2;
+        float x = getCoordForColumn(columnNumber) - horizontalSpacing;
+        float y = getCoordForRow(rowNumber) - verticalSpacing;
+        PVector buttonCoords = new PVector(x, y);
+        return buttonCoords;
     }
 
-    public void drawControls(float verticalPosition) {
-        uiDrawButton.setPosition(50, verticalPosition);
-        uiLoadButton.setPosition(250,verticalPosition);
+    public float getCoordForColumn(int colNumber) {
+        int columnWidth = getColumnWidth();
+        int columnMiddle = (columnWidth * colNumber) + (columnWidth / 2);
+        return columnMiddle;
+    }
+
+    public float getCoordForRow(int rowNumber) {
+        int rowHeight = getRowHeight();
+        int rowMiddle = (rowHeight * rowNumber) + (rowHeight / 2);
+        return rowMiddle;
+    }
+
+    public int getControlWidth(ButtonSize buttonSize) {
+        switch(buttonSize) {
+            case SMALL:
+                return smallControlWidth();
+            case MEDIUM:
+                return mediumControlWidth();
+            case LARGE:
+                return largeControlWidth();
+            default:
+                return 100;
+        }
+    }
+
+    public int getControlHeight(ButtonSize buttonSize) {
+        switch(buttonSize) {
+            case SMALL:
+                return smallControlHeight();
+            case MEDIUM:
+                return mediumControlHeight();
+            case LARGE:
+                return largeControlHeight();
+            default:
+                return 50;
+        }
+    }
+
+    public int smallControlWidth() {
+        return getColumnWidth()/10;
+    }
+
+    public int mediumControlWidth() {
+        return getColumnWidth()/5;
+    }
+
+    public int largeControlWidth() {
+        return getColumnWidth()/2;
+    }
+
+    public int smallControlHeight() {
+        return getRowHeight()/10;
+    }
+
+    public int mediumControlHeight() {
+        return getRowHeight()/5;
+    }
+
+    public int largeControlHeight() {
+        return getRowHeight()/2;
+    }
+
+    public int getRowHeight() {
+        return floor((this.windowSize/5) / this.numberOfRows);
+    }
+
+    public int getColumnWidth() {
+        return floor((this.windowSize) / this.numberOfColumns);
     }
 }
 class Machine {
@@ -924,6 +1049,80 @@ class Machine {
 
     public float getAngle() {
         return this.angle;
+    }
+}
+class StartingControls implements ControlView{
+    int windowSize;
+    LayoutGrid layoutGrid;
+
+    ControlPanel controlPanel;
+
+    Button uiDrawButton;
+    Button uiLoadButton;
+
+
+    StartingControls(int windowSize) {
+        this.windowSize = windowSize;
+        this.layoutGrid = new LayoutGrid(this.windowSize, 2, 1);
+
+        uiDrawButton = new Button(control, "Draw")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
+                .setSwitch(true)
+                .setOff()
+                .addCallback(new CallbackListener() {
+                    public void controlEvent(CallbackEvent e) {
+                        switch(e.getAction()) {
+                            case(ControlP5.ACTION_PRESSED):
+                                drawButtonPressed();
+                        }
+                    }
+                    });
+
+        uiLoadButton = new Button(control, "Load")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
+                .setSwitch(true)
+                .setOff()
+                .addCallback(new CallbackListener() {
+                    public void controlEvent(CallbackEvent e) {
+                        switch(e.getAction()) {
+                            case(ControlP5.ACTION_PRESSED):
+                                loadButtonPressed();
+                        }
+                    }
+                    });
+    }
+
+
+    public void render(float verticalPosition) {
+        drawControls(verticalPosition);
+
+    }
+
+    public void drawControls(float verticalPosition) {
+        PVector drawButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.LARGE);
+        PVector loadButtonPos = layoutGrid.getCoords(1, 0, ButtonSize.LARGE);
+        uiDrawButton.setPosition(drawButtonPos.x,
+                                 drawButtonPos.y + verticalPosition);
+        uiLoadButton.setPosition(loadButtonPos.x,
+                                 loadButtonPos.y + verticalPosition);
+    }
+
+    public ControlPanel getControlPanel() {
+        return this.controlPanel;
+    }
+
+    public void setControlPanel(ControlPanel cp) {
+        this.controlPanel = cp;
+    }
+
+    public void drawButtonPressed() {
+        this.controlPanel.setView(ControlPanelLayout.FIELD_DRAWING);
+    }
+
+    public void loadButtonPressed() {
+
     }
 }
 // class TestView implements HudView {

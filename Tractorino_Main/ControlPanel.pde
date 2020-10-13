@@ -1,6 +1,6 @@
 class ControlPanel {
     ControlP5 cp5;
-    HudView view;
+    ControlView view;
     int windowSize;
     int showHeight;
     float curHeight;
@@ -14,6 +14,7 @@ class ControlPanel {
 
     void render() {
         mouseEvent();
+        keyPressed();
         pushMatrix();
         translate(0, this.curHeight);
         drawPanel();
@@ -24,14 +25,16 @@ class ControlPanel {
     }
 
     void setView(ControlPanelLayout layout) {
-        println("doin the view");
         this.view = pickCanvas(layout);
+        this.view.setControlPanel(this);
     }
 
-    HudView pickCanvas(ControlPanelLayout layout) {
+    ControlView pickCanvas(ControlPanelLayout layout) {
         switch(layout) {
             case DRAW_OR_LOAD:
-                return new HudView(this.windowSize);
+                return new StartingControls(this.windowSize);
+            case FIELD_DRAWING:
+                return new DrawingControls(this.windowSize);
             default:
                 return null;
         }
@@ -44,8 +47,12 @@ class ControlPanel {
     }
 
     void keyPressed() {
-        if (key == '1') {
+        if (keyCode == DOWN) {
+            println("View 1");
             setView(ControlPanelLayout.DRAW_OR_LOAD);
+        } else if (keyCode == UP) {
+            println("View 2");
+            setView(ControlPanelLayout.FIELD_DRAWING);
         }
     }
 

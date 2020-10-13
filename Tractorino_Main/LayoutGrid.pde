@@ -9,79 +9,82 @@ class LayoutGrid {
         this.numberOfRows = rows;
     }
 
-    PVector getCoords( int columnNumber, int rowNumber, ButtonSize buttonSize) {
-        horizontalSpacing = getConrolWidth(buttonSize) / 2;
-        verticalSpacing = getControlHeight(buttonSize) / 2;
-        float x = getCoordForColumn(colNumber) - horizontalSpacing;
-        float y = gettCoordForRow(rowNumber) - verticalSpacing;
+    PVector getCoords(int columnNumber, int rowNumber, ButtonSize buttonSize) {
+        float horizontalSpacing = getControlWidth(buttonSize) / 2;
+        float verticalSpacing = getControlHeight(buttonSize) / 2;
+        float x = getCoordForColumn(columnNumber) - horizontalSpacing;
+        float y = getCoordForRow(rowNumber) - verticalSpacing;
         PVector buttonCoords = new PVector(x, y);
         return buttonCoords;
     }
 
-    float getCoordForAxis( int gridNumber) {
-        int gridInterval = getGridInterval();
-        int columnMiddle = (gridInterval * columnNumber) + (gridInterval / 2);
+    float getCoordForColumn(int colNumber) {
+        int columnWidth = getColumnWidth();
+        int columnMiddle = (columnWidth * colNumber) + (columnWidth / 2);
         return columnMiddle;
     }
 
-    float gettCoordForRow(int rowNumber) {
-            float columnWidth = getColumnWidth();
-            float columnMiddle = (columnWidth * columnNumber) + (columnWidth / 2);
-            return columnMiddle;
-        }
+    float getCoordForRow(int rowNumber) {
+        int rowHeight = getRowHeight();
+        int rowMiddle = (rowHeight * rowNumber) + (rowHeight / 2);
+        return rowMiddle;
     }
 
-    int getConrolWidth(ButtonSize buttonSize) {
-        Switch (buttonSize) {
-            case ButtonSize.SMALL:
+    int getControlWidth(ButtonSize buttonSize) {
+        switch(buttonSize) {
+            case SMALL:
                 return smallControlWidth();
-            case ButtonSize.MEDIUM:
+            case MEDIUM:
                 return mediumControlWidth();
-            case ButtonSize.LARGE:
+            case LARGE:
                 return largeControlWidth();
+            default:
+                return 100;
         }
     }
 
-    int getConrolHeight(ButtonSize buttonSize) {
-        Switch (buttonSize) {
-            case ButtonSize.SMALL:
+    int getControlHeight(ButtonSize buttonSize) {
+        switch(buttonSize) {
+            case SMALL:
                 return smallControlHeight();
-            case ButtonSize.MEDIUM:
+            case MEDIUM:
                 return mediumControlHeight();
-            case ButtonSize.LARGE:
+            case LARGE:
                 return largeControlHeight();
+            default:
+                return 50;
         }
     }
 
     int smallControlWidth() {
-        return getColumnWidth();
+        return getColumnWidth()/10;
     }
 
     int mediumControlWidth() {
-        return getColumnWidth();
+        return getColumnWidth()/5;
     }
 
     int largeControlWidth() {
-        return getColumnWidth();
+        return getColumnWidth()/2;
     }
 
-    int smallControlWidth() {
-        return getColumnWidth();
+    int smallControlHeight() {
+        return getRowHeight()/10;
     }
 
-    int smallControlWidth() {
-        return getColumnWidth();
+    int mediumControlHeight() {
+        return getRowHeight()/5;
     }
 
-    int smallControlWidth() {
-        return getColumnWidth();
+    int largeControlHeight() {
+        return getRowHeight()/2;
     }
 
-    int smallControlWidth() {
-        return getColumnWidth();
+    int getRowHeight() {
+        return floor((this.windowSize/5) / this.numberOfRows);
     }
 
     int getColumnWidth() {
-        return floor(this.windowSize / this.numberOfColumns);
+        return floor((this.windowSize) / this.numberOfColumns);
     }
 }
