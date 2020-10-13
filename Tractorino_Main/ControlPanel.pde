@@ -17,6 +17,9 @@ class ControlPanel {
         pushMatrix();
         translate(0, this.curHeight);
         drawPanel();
+        if (this.view != null) {
+            this.view.render(this.curHeight);
+        }
         popMatrix();
     }
 
@@ -28,7 +31,7 @@ class ControlPanel {
     HudView pickCanvas(ControlPanelLayout layout) {
         switch(layout) {
             case DRAW_OR_LOAD:
-                return new HudView(0, this.curHeight);
+                return new HudView(this.windowSize);
             default:
                 return null;
         }

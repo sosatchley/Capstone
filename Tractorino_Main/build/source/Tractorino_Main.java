@@ -334,6 +334,9 @@ class ControlPanel {
         pushMatrix();
         translate(0, this.curHeight);
         drawPanel();
+        if (this.view != null) {
+            this.view.render(this.curHeight);
+        }
         popMatrix();
     }
 
@@ -345,7 +348,7 @@ class ControlPanel {
     public HudView pickCanvas(ControlPanelLayout layout) {
         switch(layout) {
             case DRAW_OR_LOAD:
-                return new HudView(0, this.curHeight);
+                return new HudView(this.windowSize);
             default:
                 return null;
         }
@@ -851,32 +854,35 @@ class HUD {
 
 }
 class HudView {
+    int windowSize;
 
-  Button fieldStarter;
-  float x;
-  public float y;
+    Button uiDrawButton;
+    Button uiLoadButton;
 
-  HudView(float x, float y) {
-      this.x = x;
-      this.y = y;
-  }
+    HudView(int windowSize) {
+        this.windowSize = windowSize;
 
-  public void setup(PGraphics p) {
-      fieldStarter = new Button(control, "Start");
-      fieldStarter.setSize(200, 200);
-      fieldStarter.setSwitch(true);
-      fieldStarter.setOff();
-  }
-  public void draw(PGraphics p) {
-      pushMatrix();
-      translate(this.x, this.y);
-      fieldStarter.setPosition(0,0);
-      popMatrix();
-  }
+        uiDrawButton = new Button(control, "Draw")
+                            .setSize(150, 150)
+                            .setSwitch(true)
+                            .setOff();
 
-  public void move(float y) {
-      this.y = y;
-  }
+        uiLoadButton = new Button(control, "Load")
+                            .setSize(150, 150)
+                            .setSwitch(true)
+                            .setOff();
+    }
+
+
+    public void render(float verticalPosition) {
+        drawControls(verticalPosition);
+
+    }
+
+    public void drawControls(float verticalPosition) {
+        uiDrawButton.setPosition(50, verticalPosition);
+        uiLoadButton.setPosition(250,verticalPosition);
+    }
 }
 class Machine {
       PVector pos;
