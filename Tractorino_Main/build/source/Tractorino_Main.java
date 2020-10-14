@@ -71,11 +71,6 @@ public void draw() {
 }
 
 public void mousePressed() {
-    if (this.field == null) {
-        this.field = new Field(mouseX, mouseY);
-        hud.currentView = ViewMode.FOLLOW;
-        return;
-    }
   xOffset = mouseX-bx;
   yOffset = mouseY-by;
 }
@@ -342,6 +337,9 @@ class ControlPanel {
     }
 
     public void setView(ControlPanelLayout layout) {
+        if (this.view != null) {
+            this.view.release();
+        }
         this.view = pickCanvas(layout);
         this.view.setControlPanel(this);
     }
@@ -395,17 +393,25 @@ class ControlPanel {
 
 
 }
-interface ControlView {
+abstract class ControlView {
     // int windowSize;
     // LayoutGrid layoutGrid;
+    protected String[] controls;
 
-    public void render(float verticalPosition);
+    public abstract void render(float verticalPosition);
 
-    public void drawControls(float verticalPosition);
+    public abstract void drawControls(float verticalPosition);
 
-    public ControlPanel getControlPanel();
+    public abstract ControlPanel getControlPanel();
 
-    public void setControlPanel(ControlPanel cp);
+    public abstract void setControlPanel(ControlPanel cp);
+
+    public void release() {
+        println(controls.length);
+        for (int i = 0; i <= controls.length; i++) {
+            control.remove(controls[i]);
+        }
+    }
 }
 class Controller {
     Agent agent;
@@ -636,31 +642,45 @@ class Cutter {
         this.pos.y = this.follow.y - sin(this.angle) * 16;
     }
 }
-class DrawingControls implements ControlView{
+class DrawingControls extends ControlView{
     int windowSize;
     LayoutGrid layoutGrid;
 
     ControlPanel controlPanel;
 
-    Button uiDrawButton;
-    Button uiLoadButton;
+    Button uiFieldButton;
+    Button uiObstacleButton;
+    Button uiAgentButton;
+
+    Slider uiResolutionSlider;
+    Slider uiRotationSlider;
+
+    DropdownList uiObstacleType;
+    DropdownList uiCutterType;
 
 
     DrawingControls(int windowSize) {
         this.windowSize = windowSize;
-        this.layoutGrid = new LayoutGrid(this.windowSize, 2, 1);
+        this.layoutGrid = new LayoutGrid(this.windowSize, 3, 1);
 
-        uiDrawButton = new Button(control, "Draw")
-                .setSize(layoutGrid.getControlWidth(ButtonSize.SMALL),
-                         layoutGrid.getControlHeight(ButtonSize.SMALL))
+        uiFieldButton = new Button(control, "Place Field")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
 
-        uiLoadButton = new Button(control, "Load")
-                .setSize(layoutGrid.getControlWidth(ButtonSize.SMALL),
-                         layoutGrid.getControlHeight(ButtonSize.SMALL))
+        uiObstacleButton = new Button(control, "Place Obstacle")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
+
+        uiAgentButton = new Button(control, "Place Agent")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
+                .setSwitch(true)
+                .setOff();
+
     }
 
 
@@ -670,12 +690,15 @@ class DrawingControls implements ControlView{
     }
 
     public void drawControls(float verticalPosition) {
-        PVector drawButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.SMALL);
-        PVector loadButtonPos = layoutGrid.getCoords(1, 0, ButtonSize.SMALL);
-        uiDrawButton.setPosition(drawButtonPos.x,
-                                 drawButtonPos.y + verticalPosition);
-        uiLoadButton.setPosition(loadButtonPos.x,
-                                 loadButtonPos.y + verticalPosition);
+        PVector fieldButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.LARGE);
+        uiFieldButton.setPosition(fieldButtonPos.x,
+                                  fieldButtonPos.y + verticalPosition);
+        PVector obstacleButtonPos = layoutGrid.getCoords(1, 0, ButtonSize.LARGE);
+        uiObstacleButton.setPosition(obstacleButtonPos.x,
+                                     obstacleButtonPos.y + verticalPosition);
+        PVector agentButtonPos = layoutGrid.getCoords(2, 0, ButtonSize.LARGE);
+        uiAgentButton.setPosition(agentButtonPos.x,
+                                  agentButtonPos.y + verticalPosition);
     }
 
     public ControlPanel getControlPanel() {
@@ -684,6 +707,9 @@ class DrawingControls implements ControlView{
 
     public void setControlPanel(ControlPanel cp) {
         this.controlPanel = cp;
+    }
+
+    public void release() {
     }
 }
 
@@ -1051,12 +1077,13 @@ class Machine {
         return this.angle;
     }
 }
-class StartingControls implements ControlView{
+class StartingControls extends ControlView{
     int windowSize;
     LayoutGrid layoutGrid;
 
     ControlPanel controlPanel;
 
+    // String[] controls;
     Button uiDrawButton;
     Button uiLoadButton;
 
@@ -1064,6 +1091,7 @@ class StartingControls implements ControlView{
     StartingControls(int windowSize) {
         this.windowSize = windowSize;
         this.layoutGrid = new LayoutGrid(this.windowSize, 2, 1);
+        this.controls = new String[2];
 
         uiDrawButton = new Button(control, "Draw")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
@@ -1078,6 +1106,7 @@ class StartingControls implements ControlView{
                         }
                     }
                     });
+        this.controls[0] = uiDrawButton.getName();
 
         uiLoadButton = new Button(control, "Load")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
@@ -1092,6 +1121,7 @@ class StartingControls implements ControlView{
                         }
                     }
                     });
+        this.controls[1] = uiLoadButton.getName();
     }
 
 

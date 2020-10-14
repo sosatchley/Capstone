@@ -1,28 +1,42 @@
-class DrawingControls implements ControlView{
+class DrawingControls extends ControlView{
     int windowSize;
     LayoutGrid layoutGrid;
 
     ControlPanel controlPanel;
 
-    Button uiDrawButton;
-    Button uiLoadButton;
+    Button uiFieldButton;
+    Button uiObstacleButton;
+    Button uiAgentButton;
+
+    Slider uiResolutionSlider;
+    Slider uiRotationSlider;
+
+    DropdownList uiObstacleType;
+    DropdownList uiCutterType;
 
 
     DrawingControls(int windowSize) {
         this.windowSize = windowSize;
-        this.layoutGrid = new LayoutGrid(this.windowSize, 2, 1);
+        this.layoutGrid = new LayoutGrid(this.windowSize, 3, 1);
 
-        uiDrawButton = new Button(control, "Draw")
-                .setSize(layoutGrid.getControlWidth(ButtonSize.SMALL),
-                         layoutGrid.getControlHeight(ButtonSize.SMALL))
+        uiFieldButton = new Button(control, "Place Field")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
 
-        uiLoadButton = new Button(control, "Load")
-                .setSize(layoutGrid.getControlWidth(ButtonSize.SMALL),
-                         layoutGrid.getControlHeight(ButtonSize.SMALL))
+        uiObstacleButton = new Button(control, "Place Obstacle")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
+
+        uiAgentButton = new Button(control, "Place Agent")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
+                .setSwitch(true)
+                .setOff();
+
     }
 
 
@@ -32,12 +46,15 @@ class DrawingControls implements ControlView{
     }
 
     void drawControls(float verticalPosition) {
-        PVector drawButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.SMALL);
-        PVector loadButtonPos = layoutGrid.getCoords(1, 0, ButtonSize.SMALL);
-        uiDrawButton.setPosition(drawButtonPos.x,
-                                 drawButtonPos.y + verticalPosition);
-        uiLoadButton.setPosition(loadButtonPos.x,
-                                 loadButtonPos.y + verticalPosition);
+        PVector fieldButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.LARGE);
+        uiFieldButton.setPosition(fieldButtonPos.x,
+                                  fieldButtonPos.y + verticalPosition);
+        PVector obstacleButtonPos = layoutGrid.getCoords(1, 0, ButtonSize.LARGE);
+        uiObstacleButton.setPosition(obstacleButtonPos.x,
+                                     obstacleButtonPos.y + verticalPosition);
+        PVector agentButtonPos = layoutGrid.getCoords(2, 0, ButtonSize.LARGE);
+        uiAgentButton.setPosition(agentButtonPos.x,
+                                  agentButtonPos.y + verticalPosition);
     }
 
     ControlPanel getControlPanel() {
@@ -46,5 +63,8 @@ class DrawingControls implements ControlView{
 
     void setControlPanel(ControlPanel cp) {
         this.controlPanel = cp;
+    }
+
+    void release() {
     }
 }

@@ -1,9 +1,10 @@
-class StartingControls implements ControlView{
+class StartingControls extends ControlView{
     int windowSize;
     LayoutGrid layoutGrid;
 
     ControlPanel controlPanel;
 
+    // String[] controls;
     Button uiDrawButton;
     Button uiLoadButton;
 
@@ -11,6 +12,7 @@ class StartingControls implements ControlView{
     StartingControls(int windowSize) {
         this.windowSize = windowSize;
         this.layoutGrid = new LayoutGrid(this.windowSize, 2, 1);
+        this.controls = new String[2];
 
         uiDrawButton = new Button(control, "Draw")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
@@ -25,6 +27,7 @@ class StartingControls implements ControlView{
                         }
                     }
                     });
+        this.controls[0] = uiDrawButton.getName();
 
         uiLoadButton = new Button(control, "Load")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
@@ -39,6 +42,7 @@ class StartingControls implements ControlView{
                         }
                     }
                     });
+        this.controls[1] = uiLoadButton.getName();
     }
 
 

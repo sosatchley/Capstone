@@ -52,11 +52,6 @@ void draw() {
 }
 
 void mousePressed() {
-    if (this.field == null) {
-        this.field = new Field(mouseX, mouseY);
-        hud.currentView = ViewMode.FOLLOW;
-        return;
-    }
   xOffset = mouseX-bx;
   yOffset = mouseY-by;
 }

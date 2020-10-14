@@ -25,6 +25,9 @@ class ControlPanel {
     }
 
     void setView(ControlPanelLayout layout) {
+        if (this.view != null) {
+            this.view.release();
+        }
         this.view = pickCanvas(layout);
         this.view.setControlPanel(this);
     }

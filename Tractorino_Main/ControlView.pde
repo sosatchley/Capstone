@@ -1,12 +1,20 @@
-interface ControlView {
+abstract class ControlView {
     // int windowSize;
     // LayoutGrid layoutGrid;
+    protected String[] controls;
 
-    void render(float verticalPosition);
+    abstract void render(float verticalPosition);
 
-    void drawControls(float verticalPosition);
+    abstract void drawControls(float verticalPosition);
 
-    ControlPanel getControlPanel();
+    abstract ControlPanel getControlPanel();
 
-    void setControlPanel(ControlPanel cp);
+    abstract void setControlPanel(ControlPanel cp);
+
+    void release() {
+        println(controls.length);
+        for (int i = 0; i <= controls.length; i++) {
+            control.remove(controls[i]);
+        }
+    }
 }
