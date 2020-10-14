@@ -394,23 +394,139 @@ class ControlPanel {
 
 }
 abstract class ControlView {
-    // int windowSize;
-    // LayoutGrid layoutGrid;
+
+    int windowSize;
+
+    ControlPanel controlPanel;
+
+    LayoutGrid layoutGrid;
+
     protected String[] controls;
+
+    protected Button uiBackButton;
 
     public abstract void render(float verticalPosition);
 
     public abstract void drawControls(float verticalPosition);
 
-    public abstract ControlPanel getControlPanel();
-
-    public abstract void setControlPanel(ControlPanel cp);
-
     public void release() {
-        println(controls.length);
-        for (int i = 0; i <= controls.length; i++) {
+        for (int i = 0; i < controls.length; i++) {
             control.remove(controls[i]);
         }
+        control.remove("<");
+    }
+
+    public ControlPanel getControlPanel() {
+        return this.controlPanel;
+    }
+
+    public void setControlPanel(ControlPanel cp) {
+        this.controlPanel = cp;
+    }
+
+    public Button setupBackButton() {
+        Button backButton;
+        PVector buttonSize = this.layoutGrid.backButtonSize();
+        backButton = new Button(control, "<")
+                        .setSize(floor(buttonSize.x), floor(buttonSize.y))
+                        .setView(new BackButton(buttonSize.x))
+                        .addCallback(new CallbackListener() {
+                            public void controlEvent(CallbackEvent e) {
+                                switch(e.getAction()) {
+                                    case(ControlP5.ACTION_PRESSED):
+                                        println("Back pressed");
+                                }
+                            }
+                            });
+        return backButton;
+    }
+
+    public void drawBackButton(float verticalPosition) {
+        PVector pos = this.layoutGrid.backButtonPosition();
+        uiBackButton.setPosition(pos.x, pos.y + verticalPosition);
+    }
+}
+
+class BackButton implements ControllerView<Button> {
+    float currentWidth;
+    float buttonShow;
+    float buttonHide;
+    Button boundary;
+
+    BackButton(float maxWidth) {
+        this.currentWidth = 0;
+        this.buttonShow = maxWidth;
+        this.buttonHide = 0;
+        this.boundary = new Button(control, "Boundary")
+                        .setSize(floor(maxWidth), floor(maxWidth*4))
+                        .setPosition(0, (maxWidth*4)*4)
+                        .setColorBackground(color(0,1))
+                        .setColorForeground(color(0,1))
+                        .setColorActive(color(0,1))
+                        .setLabelVisible(false);
+    }
+
+    public void lerpWidth(float target) {
+        this.currentWidth = lerp(this.currentWidth, target, 0.1f);
+    }
+
+    public void display(PGraphics theApplet, Button theButton) {
+        theApplet.pushMatrix();
+        if (this.boundary.isMouseOver()) {
+            if (this.currentWidth < this.buttonShow-1) {
+                lerpWidth(this.buttonShow);
+            } else {
+                this.currentWidth = this.buttonShow;
+            }
+        } else {
+            if (this.currentWidth > 1) {
+                lerpWidth(this.buttonHide);
+            } else {
+                this.currentWidth = this.buttonHide;
+            }
+        }
+        if (this.boundary.isPressed()) {
+            theButton.mousePressed();
+        }
+        if (theButton.isInside()) {
+            if (theButton.isPressed()) { // button is pressed
+                println("Back Pressed");
+                theApplet.fill(70, 255);
+                theApplet.strokeWeight(2);
+                theApplet.stroke(255);
+
+            } else { // mouse hovers the button
+                theApplet.fill(70, 200);
+                theApplet.strokeWeight(2);
+                theApplet.stroke(37, 206, 255);
+                theButton.setSize(floor(currentWidth), 100);
+            }
+        } else { // the mouse is located outside the button area
+            theApplet.fill(50, 200);
+            theApplet.stroke(27, 196, 245);
+            theButton.setSize(floor(currentWidth), 100);
+        }
+
+        theApplet.ellipse(0, 0, theButton.getWidth(), theButton.getHeight());
+
+        // center the caption label
+        int x = theButton.getWidth();//*(3/4);// - theButton.getCaptionLabel().getWidth()/4;
+        int y = theButton.getHeight()/2;// - theButton.getCaptionLabel().getHeight()/2;
+        float pointX = theButton.getWidth() * (5.f/8.f);
+        float pointY = theButton.getHeight() * (1.f/2.f);
+        float topX = theButton.getWidth() * (7.f/8.f);
+        float topY = theButton.getHeight() * (2.f/5.f);
+        float bottomX = theButton.getWidth() * (7.f/8.f);
+        float bottomY = theButton.getHeight() * (3.f/5.f);
+
+        // translate(x, y);
+        // theButton.getCaptionLabel().draw(theApplet);
+        strokeWeight(4);
+        stroke(255);
+        line(pointX, pointY, topX, topY);
+        line(pointX, pointY, bottomX, bottomY);
+
+        theApplet.popMatrix();
     }
 }
 class Controller {
@@ -956,6 +1072,16 @@ class LayoutGrid {
         this.numberOfRows = rows;
     }
 
+    public PVector backButtonPosition() {
+        return new PVector(-25, (this.windowSize/10) - (this.windowSize/20));
+    }
+
+    public PVector backButtonSize() {
+        int buttonWidth = this.windowSize/20;
+        int buttonHeight = this.windowSize/10;
+        return new PVector(buttonWidth, buttonHeight);
+    }
+
     public PVector getCoords(int columnNumber, int rowNumber, ButtonSize buttonSize) {
         float horizontalSpacing = getControlWidth(buttonSize) / 2;
         float verticalSpacing = getControlHeight(buttonSize) / 2;
@@ -1078,15 +1204,9 @@ class Machine {
     }
 }
 class StartingControls extends ControlView{
-    int windowSize;
-    LayoutGrid layoutGrid;
 
-    ControlPanel controlPanel;
-
-    // String[] controls;
     Button uiDrawButton;
     Button uiLoadButton;
-
 
     StartingControls(int windowSize) {
         this.windowSize = windowSize;
@@ -1122,6 +1242,7 @@ class StartingControls extends ControlView{
                     }
                     });
         this.controls[1] = uiLoadButton.getName();
+        uiBackButton = setupBackButton();
     }
 
 
@@ -1137,14 +1258,7 @@ class StartingControls extends ControlView{
                                  drawButtonPos.y + verticalPosition);
         uiLoadButton.setPosition(loadButtonPos.x,
                                  loadButtonPos.y + verticalPosition);
-    }
-
-    public ControlPanel getControlPanel() {
-        return this.controlPanel;
-    }
-
-    public void setControlPanel(ControlPanel cp) {
-        this.controlPanel = cp;
+        drawBackButton(verticalPosition);
     }
 
     public void drawButtonPressed() {

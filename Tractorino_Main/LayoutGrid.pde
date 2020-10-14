@@ -9,6 +9,16 @@ class LayoutGrid {
         this.numberOfRows = rows;
     }
 
+    PVector backButtonPosition() {
+        return new PVector(-25, (this.windowSize/10) - (this.windowSize/20));
+    }
+
+    PVector backButtonSize() {
+        int buttonWidth = this.windowSize/20;
+        int buttonHeight = this.windowSize/10;
+        return new PVector(buttonWidth, buttonHeight);
+    }
+
     PVector getCoords(int columnNumber, int rowNumber, ButtonSize buttonSize) {
         float horizontalSpacing = getControlWidth(buttonSize) / 2;
         float verticalSpacing = getControlHeight(buttonSize) / 2;

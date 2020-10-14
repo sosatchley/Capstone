@@ -1,13 +1,7 @@
 class StartingControls extends ControlView{
-    int windowSize;
-    LayoutGrid layoutGrid;
 
-    ControlPanel controlPanel;
-
-    // String[] controls;
     Button uiDrawButton;
     Button uiLoadButton;
-
 
     StartingControls(int windowSize) {
         this.windowSize = windowSize;
@@ -43,6 +37,7 @@ class StartingControls extends ControlView{
                     }
                     });
         this.controls[1] = uiLoadButton.getName();
+        uiBackButton = setupBackButton();
     }
 
 
@@ -58,14 +53,7 @@ class StartingControls extends ControlView{
                                  drawButtonPos.y + verticalPosition);
         uiLoadButton.setPosition(loadButtonPos.x,
                                  loadButtonPos.y + verticalPosition);
-    }
-
-    ControlPanel getControlPanel() {
-        return this.controlPanel;
-    }
-
-    void setControlPanel(ControlPanel cp) {
-        this.controlPanel = cp;
+        drawBackButton(verticalPosition);
     }
 
     void drawButtonPressed() {
