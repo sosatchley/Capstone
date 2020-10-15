@@ -429,12 +429,13 @@ abstract class ControlView {
         PVector buttonSize = this.layoutGrid.backButtonSize();
         backButton = new Button(control, "<")
                         .setSize(floor(buttonSize.x), floor(buttonSize.y))
-                        .setView(new BackButton(buttonSize.x))
+                        .setView(new BackButton())
                         .addCallback(new CallbackListener() {
                             public void controlEvent(CallbackEvent e) {
                                 switch(e.getAction()) {
                                     case(ControlP5.ACTION_PRESSED):
-                                        println("Back pressed");
+                                        println("THE BUTTON IS PRESSED< AAAAAAAH!");
+                                        // backButtonPressed();
                                 }
                             }
                             });
@@ -445,66 +446,31 @@ abstract class ControlView {
         PVector pos = this.layoutGrid.backButtonPosition();
         uiBackButton.setPosition(pos.x, pos.y + verticalPosition);
     }
+
+    public void backButtonPressed() {
+        this.controlPanel.setView(ControlPanelLayout.DRAW_OR_LOAD);
+    }
 }
 
 class BackButton implements ControllerView<Button> {
-    float currentWidth;
-    float buttonShow;
-    float buttonHide;
-    Button boundary;
-
-    BackButton(float maxWidth) {
-        this.currentWidth = 0;
-        this.buttonShow = maxWidth;
-        this.buttonHide = 0;
-        this.boundary = new Button(control, "Boundary")
-                        .setSize(floor(maxWidth), floor(maxWidth*4))
-                        .setPosition(0, (maxWidth*4)*4)
-                        .setColorBackground(color(0,1))
-                        .setColorForeground(color(0,1))
-                        .setColorActive(color(0,1))
-                        .setLabelVisible(false);
-    }
-
-    public void lerpWidth(float target) {
-        this.currentWidth = lerp(this.currentWidth, target, 0.1f);
-    }
 
     public void display(PGraphics theApplet, Button theButton) {
         theApplet.pushMatrix();
-        if (this.boundary.isMouseOver()) {
-            if (this.currentWidth < this.buttonShow-1) {
-                lerpWidth(this.buttonShow);
-            } else {
-                this.currentWidth = this.buttonShow;
-            }
-        } else {
-            if (this.currentWidth > 1) {
-                lerpWidth(this.buttonHide);
-            } else {
-                this.currentWidth = this.buttonHide;
-            }
-        }
-        if (this.boundary.isPressed()) {
-            theButton.mousePressed();
-        }
         if (theButton.isInside()) {
-            if (theButton.isPressed()) { // button is pressed
-                println("Back Pressed");
-                theApplet.fill(70, 255);
-                theApplet.strokeWeight(2);
-                theApplet.stroke(255);
-
-            } else { // mouse hovers the button
+            // if (theButton.isPressed()) { // button is pressed
+            //     println("Back Pressed");
+            //     theApplet.fill(70, 255);
+            //     theApplet.strokeWeight(2);
+            //     theApplet.stroke(255);
+            //
+            // } else { // mouse hovers the button
                 theApplet.fill(70, 200);
                 theApplet.strokeWeight(2);
                 theApplet.stroke(37, 206, 255);
-                theButton.setSize(floor(currentWidth), 100);
-            }
+            // }
         } else { // the mouse is located outside the button area
             theApplet.fill(50, 200);
             theApplet.stroke(27, 196, 245);
-            theButton.setSize(floor(currentWidth), 100);
         }
 
         theApplet.ellipse(0, 0, theButton.getWidth(), theButton.getHeight());
@@ -759,10 +725,6 @@ class Cutter {
     }
 }
 class DrawingControls extends ControlView{
-    int windowSize;
-    LayoutGrid layoutGrid;
-
-    ControlPanel controlPanel;
 
     Button uiFieldButton;
     Button uiObstacleButton;
@@ -778,31 +740,35 @@ class DrawingControls extends ControlView{
     DrawingControls(int windowSize) {
         this.windowSize = windowSize;
         this.layoutGrid = new LayoutGrid(this.windowSize, 3, 1);
+        this.controls = new String[3];
 
         uiFieldButton = new Button(control, "Place Field")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
                          layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
+        this.controls[0] = uiFieldButton.getName();
 
         uiObstacleButton = new Button(control, "Place Obstacle")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
                          layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
+        this.controls[1] = uiObstacleButton.getName();
 
         uiAgentButton = new Button(control, "Place Agent")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
                          layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
+                uiBackButton = setupBackButton();
+        this.controls[2] = uiAgentButton.getName();
 
     }
 
 
     public void render(float verticalPosition) {
         drawControls(verticalPosition);
-
     }
 
     public void drawControls(float verticalPosition) {
@@ -815,17 +781,7 @@ class DrawingControls extends ControlView{
         PVector agentButtonPos = layoutGrid.getCoords(2, 0, ButtonSize.LARGE);
         uiAgentButton.setPosition(agentButtonPos.x,
                                   agentButtonPos.y + verticalPosition);
-    }
-
-    public ControlPanel getControlPanel() {
-        return this.controlPanel;
-    }
-
-    public void setControlPanel(ControlPanel cp) {
-        this.controlPanel = cp;
-    }
-
-    public void release() {
+         drawBackButton(verticalPosition);
     }
 }
 
@@ -1242,7 +1198,6 @@ class StartingControls extends ControlView{
                     }
                     });
         this.controls[1] = uiLoadButton.getName();
-        uiBackButton = setupBackButton();
     }
 
 
@@ -1258,7 +1213,6 @@ class StartingControls extends ControlView{
                                  drawButtonPos.y + verticalPosition);
         uiLoadButton.setPosition(loadButtonPos.x,
                                  loadButtonPos.y + verticalPosition);
-        drawBackButton(verticalPosition);
     }
 
     public void drawButtonPressed() {

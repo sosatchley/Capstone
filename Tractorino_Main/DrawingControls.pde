@@ -1,8 +1,4 @@
 class DrawingControls extends ControlView{
-    int windowSize;
-    LayoutGrid layoutGrid;
-
-    ControlPanel controlPanel;
 
     Button uiFieldButton;
     Button uiObstacleButton;
@@ -18,31 +14,35 @@ class DrawingControls extends ControlView{
     DrawingControls(int windowSize) {
         this.windowSize = windowSize;
         this.layoutGrid = new LayoutGrid(this.windowSize, 3, 1);
+        this.controls = new String[3];
 
         uiFieldButton = new Button(control, "Place Field")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
                          layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
+        this.controls[0] = uiFieldButton.getName();
 
         uiObstacleButton = new Button(control, "Place Obstacle")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
                          layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
+        this.controls[1] = uiObstacleButton.getName();
 
         uiAgentButton = new Button(control, "Place Agent")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
                          layoutGrid.getControlHeight(ButtonSize.LARGE))
                 .setSwitch(true)
                 .setOff();
+                uiBackButton = setupBackButton();
+        this.controls[2] = uiAgentButton.getName();
 
     }
 
 
     public void render(float verticalPosition) {
         drawControls(verticalPosition);
-
     }
 
     void drawControls(float verticalPosition) {
@@ -55,16 +55,6 @@ class DrawingControls extends ControlView{
         PVector agentButtonPos = layoutGrid.getCoords(2, 0, ButtonSize.LARGE);
         uiAgentButton.setPosition(agentButtonPos.x,
                                   agentButtonPos.y + verticalPosition);
-    }
-
-    ControlPanel getControlPanel() {
-        return this.controlPanel;
-    }
-
-    void setControlPanel(ControlPanel cp) {
-        this.controlPanel = cp;
-    }
-
-    void release() {
+         drawBackButton(verticalPosition);
     }
 }

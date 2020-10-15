@@ -37,7 +37,6 @@ class StartingControls extends ControlView{
                     }
                     });
         this.controls[1] = uiLoadButton.getName();
-        uiBackButton = setupBackButton();
     }
 
 
@@ -53,7 +52,6 @@ class StartingControls extends ControlView{
                                  drawButtonPos.y + verticalPosition);
         uiLoadButton.setPosition(loadButtonPos.x,
                                  loadButtonPos.y + verticalPosition);
-        drawBackButton(verticalPosition);
     }
 
     void drawButtonPressed() {
