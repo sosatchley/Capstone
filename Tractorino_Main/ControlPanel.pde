@@ -1,15 +1,18 @@
 class ControlPanel {
-    ControlP5 cp5;
+    HUD hud;
     ControlView view;
     int windowSize;
     int showHeight;
     float curHeight;
+    ControlPanelLock lock;
 
-    ControlPanel(ControlP5 cp5, int windowSize) {
-        this.cp5 = cp5;
-        this.windowSize = windowSize;
+    ControlPanel(HUD hud) {
+        this.hud = hud;
+        this.windowSize = verticalResolution;
         this.showHeight = windowSize/5;
         this.curHeight = height;
+        this.view = new ControlView(this);
+        this.lock = ControlPanelLock.NONE;
     }
 
     void render() {
@@ -18,29 +21,14 @@ class ControlPanel {
         pushMatrix();
         translate(0, this.curHeight);
         drawPanel();
-        if (this.view != null) {
+        if (this.view.currentLayout != null) {
             this.view.render(this.curHeight);
         }
         popMatrix();
     }
 
     void setView(ControlPanelLayout layout) {
-        if (this.view != null) {
-            this.view.release();
-        }
-        this.view = pickCanvas(layout);
-        this.view.setControlPanel(this);
-    }
-
-    ControlView pickCanvas(ControlPanelLayout layout) {
-        switch(layout) {
-            case DRAW_OR_LOAD:
-                return new StartingControls(this.windowSize);
-            case FIELD_DRAWING:
-                return new DrawingControls(this.windowSize);
-            default:
-                return null;
-        }
+        this.view.setCurrentLayout(layout);
     }
 
     void drawPanel() {
@@ -59,9 +47,24 @@ class ControlPanel {
         }
     }
 
+    void setLock(ControlPanelLock lock) {
+        this.lock = lock;
+    }
+
+    boolean isLocked() {
+        if (this.lock == ControlPanelLock.HIDE) {
+            hide();
+            return true;
+        } else if (this.lock == ControlPanelLock.SHOW) {
+            show();
+            return true;
+        }
+        return false;
+    }
+
     void show() {
         this.curHeight = lerp(this.curHeight, height-this.showHeight, 0.2);
-        if (this.view == null) {
+        if (this.view.currentLayout == null) {
             setView(ControlPanelLayout.DRAW_OR_LOAD);
         }
     }
@@ -71,13 +74,36 @@ class ControlPanel {
     }
 
     void mouseEvent() {
-        if (mouseY > (this.windowSize/10) * 9) {
-            show();
-        }
-        else if (mouseY < (this.windowSize/10) * 7) {
-            hide();
+        if (isLocked()) {
+            return;
+        } else {
+            if (mouseY > (this.windowSize/10) * 9) {
+                show();
+            }
+            else if (mouseY < (this.windowSize/10) * 7) {
+                hide();
+            }
         }
     }
 
+    void initializeField() {
+        field = new Field();
+    }
+
+    void initializeAgent() {
+        agent = new Agent();
+    }
+
+    void fieldReady() {
+        view.resetFieldButton();
+    }
+
+    void agentReady() {
+        view.resetAgentButton();
+    }
+
+    void changeFieldResolution(int value) {
+        field.reduceShapeResolutionByFactor(value);
+    }
 
 }

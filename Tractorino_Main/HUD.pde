@@ -1,7 +1,6 @@
-import controlP5.*;
 class HUD {
     int windowSize;
-    ControlP5 control;
+    PApplet sketch;
     ControlPanel panel;
 
     float curHeight;
@@ -11,11 +10,11 @@ class HUD {
     ViewMode currentView;
     boolean vis;
 
-    HUD(int windowSize, ControlP5 control) {
-        this.windowSize = windowSize;
-        this.control = control;
-        this.panel = new ControlPanel(control, windowSize);
-        this.showHeight = windowSize/5;
+    HUD(PApplet sketch) {
+        this.sketch = sketch;
+        this.windowSize = verticalResolution;
+        this.panel = new ControlPanel(this);
+        this.showHeight = this.windowSize/5;
         this.curHeight = height;
         this.currentView = ViewMode.FOLLOW;
         this.vis = false;
@@ -68,7 +67,8 @@ class HUD {
     void show() {
         this.vis = true;
         this.curHeight = lerp(this.curHeight, height-this.showHeight, 0.2);
-        if (this.panel.view == null) {
+        println("Layout: " + this.panel.view.currentLayout);
+        if (this.panel.view.currentLayout == null) {
             panel.setView(ControlPanelLayout.DRAW_OR_LOAD);
         }
     }
