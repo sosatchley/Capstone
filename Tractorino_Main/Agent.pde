@@ -9,8 +9,10 @@ class Agent {
     int loopCount;
     float dist;
     Controller controller;
+    boolean placing;
 
     Agent() {
+        this.placing = true;
         this.controller = new Controller(this);
         this.wheels = new Wheels();
         this.machine = new Machine(this.wheels.pos);
@@ -23,6 +25,10 @@ class Agent {
     }
 
     void render() {
+        if (this.placing) {
+            this.wheels.pos.x = mouseX;
+            this.wheels.pos.y = mouseY;
+        }
         this.wheels.show();
         this.axle.show();
         this.machine.show();
@@ -53,6 +59,13 @@ class Agent {
 
     void setDistance(float distance) {
         this.dist = distance;
+    }
+
+    void setStartingPosition(float x, float y) {
+        this.placing = false;
+        this.wheels.pos.x = x;
+        this.wheels.pos.y = y;
+        hud.panel.agentReady();
     }
 
     void setCutterAngle(float angle) {

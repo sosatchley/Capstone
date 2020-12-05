@@ -57,38 +57,20 @@ public void setup() {
 }
 
 public void draw() {
-    mouseListener();
-    hudListener();
+    // hudListener();
     background(0);
     pushMatrix();
     // stateListener();
-    drawView();
+    // drawView();
     if (field != null) {
         field.render();
     }
     agent.render();
-    if (controller) {
-        agent.controller.control();
-    }
     popMatrix();
     hud.render();
 }
 
-public void mouseListener() {
-    if (mouseY > (this.verticalResolution/10) * 9) {
-        hud.show();
-    }
-    else if (mouseY < (this.verticalResolution/10) * 7) {
-        hud.hide();
-    }
-}
-
 public void mousePressed() {
-    if (this.field == null) {
-        this.field = new Field(mouseX, mouseY);
-        hud.currentView = ViewMode.FOLLOW;
-        return;
-    }
   xOffset = mouseX-bx;
   yOffset = mouseY-by;
 }
@@ -118,14 +100,14 @@ public void mouseWheel(MouseEvent event) {
 }
 
 public void hudListener() {
-    agent.wheels.speedMult = hud.speedSlider.getValue();
-    if (hud.fieldStarter.isPressed()) {
-    }
-    if (hud.controllerToggle.getState()) {
-        controller = true;
-    } else {
-        controller = false;
-    }
+    // agent.wheels.speedMult = hud.speedSlider.getValue();
+    // if (hud.fieldStarter.isPressed()) {
+    // }
+    // if (hud.controllerToggle.getState()) {
+    //     controller = true;
+    // } else {
+    //     controller = false;
+    // }
 }
 
 public void drawView() {
@@ -144,11 +126,11 @@ public void drawView() {
 }
 
 public void pan() {
-    hud.viewButton.setLabel("Follow");
-    translate(bx, by);
-    if (field != null && !field.drawing) {
-        zoom(field.center.x, field.center.y);
-    }
+    // hud.viewButton.setLabel("Follow");
+    // translate(bx, by);
+    // if (field != null && !field.drawing) {
+    //     zoom(field.center.x, field.center.y);
+    // }
 }
 
 public void follow() {
@@ -327,6 +309,191 @@ class Axle {
         this.pos.y = this.follow.y - sin(this.angle *20);
     }
 
+}
+class ControlPanel {
+    ControlP5 cp5;
+    ControlView view;
+    int windowSize;
+    int showHeight;
+    float curHeight;
+
+    ControlPanel(ControlP5 cp5, int windowSize) {
+        this.cp5 = cp5;
+        this.windowSize = windowSize;
+        this.showHeight = windowSize/5;
+        this.curHeight = height;
+    }
+
+    public void render() {
+        mouseEvent();
+        keyPressed();
+        pushMatrix();
+        translate(0, this.curHeight);
+        drawPanel();
+        if (this.view != null) {
+            this.view.render(this.curHeight);
+        }
+        popMatrix();
+    }
+
+    public void setView(ControlPanelLayout layout) {
+        if (this.view != null) {
+            this.view.release();
+        }
+        this.view = pickCanvas(layout);
+        this.view.setControlPanel(this);
+    }
+
+    public ControlView pickCanvas(ControlPanelLayout layout) {
+        switch(layout) {
+            case DRAW_OR_LOAD:
+                return new StartingControls(this.windowSize);
+            case FIELD_DRAWING:
+                return new DrawingControls(this.windowSize);
+            default:
+                return null;
+        }
+    }
+
+    public void drawPanel() {
+        fill(255, 100);
+        stroke(27, 196, 245);
+        rect(0, 0, width-1, this.showHeight+10, 10);
+    }
+
+    public void keyPressed() {
+        if (keyCode == DOWN) {
+            println("View 1");
+            setView(ControlPanelLayout.DRAW_OR_LOAD);
+        } else if (keyCode == UP) {
+            println("View 2");
+            setView(ControlPanelLayout.FIELD_DRAWING);
+        }
+    }
+
+    public void show() {
+        this.curHeight = lerp(this.curHeight, height-this.showHeight, 0.2f);
+        if (this.view == null) {
+            setView(ControlPanelLayout.DRAW_OR_LOAD);
+        }
+    }
+
+    public void hide() {
+        this.curHeight = lerp(this.curHeight, height+1, 0.1f);
+    }
+
+    public void mouseEvent() {
+        if (mouseY > (this.windowSize/10) * 9) {
+            show();
+        }
+        else if (mouseY < (this.windowSize/10) * 7) {
+            hide();
+        }
+    }
+
+
+}
+abstract class ControlView {
+
+    int windowSize;
+
+    ControlPanel controlPanel;
+
+    LayoutGrid layoutGrid;
+
+    protected String[] controls;
+
+    protected Button uiBackButton;
+
+    public abstract void render(float verticalPosition);
+
+    public abstract void drawControls(float verticalPosition);
+
+    public void release() {
+        for (int i = 0; i < controls.length; i++) {
+            control.remove(controls[i]);
+        }
+        control.remove("<");
+    }
+
+    public ControlPanel getControlPanel() {
+        return this.controlPanel;
+    }
+
+    public void setControlPanel(ControlPanel cp) {
+        this.controlPanel = cp;
+    }
+
+    public Button setupBackButton() {
+        Button backButton;
+        PVector buttonSize = this.layoutGrid.backButtonSize();
+        backButton = new Button(control, "<")
+                        .setSize(floor(buttonSize.x), floor(buttonSize.y))
+                        .setView(new BackButton())
+                        .addCallback(new CallbackListener() {
+                            public void controlEvent(CallbackEvent e) {
+                                switch(e.getAction()) {
+                                    case(ControlP5.ACTION_PRESSED):
+                                        println("THE BUTTON IS PRESSED< AAAAAAAH!");
+                                        // backButtonPressed();
+                                }
+                            }
+                            });
+        return backButton;
+    }
+
+    public void drawBackButton(float verticalPosition) {
+        PVector pos = this.layoutGrid.backButtonPosition();
+        uiBackButton.setPosition(pos.x, pos.y + verticalPosition);
+    }
+
+    public void backButtonPressed() {
+        this.controlPanel.setView(ControlPanelLayout.DRAW_OR_LOAD);
+    }
+}
+
+class BackButton implements ControllerView<Button> {
+
+    public void display(PGraphics theApplet, Button theButton) {
+        theApplet.pushMatrix();
+        if (theButton.isInside()) {
+            // if (theButton.isPressed()) { // button is pressed
+            //     println("Back Pressed");
+            //     theApplet.fill(70, 255);
+            //     theApplet.strokeWeight(2);
+            //     theApplet.stroke(255);
+            //
+            // } else { // mouse hovers the button
+                theApplet.fill(70, 200);
+                theApplet.strokeWeight(2);
+                theApplet.stroke(37, 206, 255);
+            // }
+        } else { // the mouse is located outside the button area
+            theApplet.fill(50, 200);
+            theApplet.stroke(27, 196, 245);
+        }
+
+        theApplet.ellipse(0, 0, theButton.getWidth(), theButton.getHeight());
+
+        // center the caption label
+        int x = theButton.getWidth();//*(3/4);// - theButton.getCaptionLabel().getWidth()/4;
+        int y = theButton.getHeight()/2;// - theButton.getCaptionLabel().getHeight()/2;
+        float pointX = theButton.getWidth() * (5.f/8.f);
+        float pointY = theButton.getHeight() * (1.f/2.f);
+        float topX = theButton.getWidth() * (7.f/8.f);
+        float topY = theButton.getHeight() * (2.f/5.f);
+        float bottomX = theButton.getWidth() * (7.f/8.f);
+        float bottomY = theButton.getHeight() * (3.f/5.f);
+
+        // translate(x, y);
+        // theButton.getCaptionLabel().draw(theApplet);
+        strokeWeight(4);
+        stroke(255);
+        line(pointX, pointY, topX, topY);
+        line(pointX, pointY, bottomX, bottomY);
+
+        theApplet.popMatrix();
+    }
 }
 class Controller {
     Agent agent;
@@ -557,6 +724,66 @@ class Cutter {
         this.pos.y = this.follow.y - sin(this.angle) * 16;
     }
 }
+class DrawingControls extends ControlView{
+
+    Button uiFieldButton;
+    Button uiObstacleButton;
+    Button uiAgentButton;
+
+    Slider uiResolutionSlider;
+    Slider uiRotationSlider;
+
+    DropdownList uiObstacleType;
+    DropdownList uiCutterType;
+
+
+    DrawingControls(int windowSize) {
+        this.windowSize = windowSize;
+        this.layoutGrid = new LayoutGrid(this.windowSize, 3, 1);
+        this.controls = new String[3];
+
+        uiFieldButton = new Button(control, "Place Field")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
+                .setSwitch(true)
+                .setOff();
+        this.controls[0] = uiFieldButton.getName();
+
+        uiObstacleButton = new Button(control, "Place Obstacle")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
+                .setSwitch(true)
+                .setOff();
+        this.controls[1] = uiObstacleButton.getName();
+
+        uiAgentButton = new Button(control, "Place Agent")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
+                .setSwitch(true)
+                .setOff();
+                uiBackButton = setupBackButton();
+        this.controls[2] = uiAgentButton.getName();
+
+    }
+
+
+    public void render(float verticalPosition) {
+        drawControls(verticalPosition);
+    }
+
+    public void drawControls(float verticalPosition) {
+        PVector fieldButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.LARGE);
+        uiFieldButton.setPosition(fieldButtonPos.x,
+                                  fieldButtonPos.y + verticalPosition);
+        PVector obstacleButtonPos = layoutGrid.getCoords(1, 0, ButtonSize.LARGE);
+        uiObstacleButton.setPosition(obstacleButtonPos.x,
+                                     obstacleButtonPos.y + verticalPosition);
+        PVector agentButtonPos = layoutGrid.getCoords(2, 0, ButtonSize.LARGE);
+        uiAgentButton.setPosition(agentButtonPos.x,
+                                  agentButtonPos.y + verticalPosition);
+         drawBackButton(verticalPosition);
+    }
+}
 
 class Field {
     Agent agent;
@@ -703,6 +930,7 @@ class Field {
 class HUD {
     int windowSize;
     ControlP5 control;
+    ControlPanel panel;
 
     float curHeight;
     int showHeight;
@@ -711,143 +939,46 @@ class HUD {
     ViewMode currentView;
     boolean vis;
 
-    Slider speedSlider;
-    Toggle sideToggle;
-    Toggle controllerToggle;
-    Button fieldStarter;
-    Button viewButton;
-    Button saveFieldButton;
-    Button loadFieldButton;
-    Button newFieldButton;
-
-// TODO: Add program restart. Use redraw()
-//      This is not a use case of redraw()
-//
-// TODO: Remove 'Prediction'
-// TODO: Remove 'Reset Program'
-// TODO: Replace 'Vertices', 'controllerToggle (AutoSteer)' with button switches
-
     HUD(int windowSize, ControlP5 control) {
         this.windowSize = windowSize;
         this.control = control;
+        this.panel = new ControlPanel(control, windowSize);
         this.showHeight = windowSize/5;
         this.curHeight = height;
         this.currentView = ViewMode.FOLLOW;
         this.vis = false;
-
-        int controlWidth = showHeight/4;
-        int controlHeight = showHeight/10;
-        ControlFont controlFont = new ControlFont(createFont("Arial",controlHeight/2));
-
-        sideToggle = new Toggle(control, "Outside");
-        sideToggle.setSize(controlWidth, controlHeight);
-        sideToggle.setMode(ControlP5.SWITCH);
-        sideToggle.setFont(controlFont);
-
-        controllerToggle = new Toggle(control, "Controller");
-        controllerToggle.setSize(controlWidth, controlHeight);
-        controllerToggle.setMode(ControlP5.SWITCH);
-        controllerToggle.setValue(false);
-        controllerToggle.setFont(controlFont);
-
-        fieldStarter = new Button(control, "Start");
-        fieldStarter.setSize(controlWidth, controlHeight);
-        fieldStarter.setSwitch(true);
-        fieldStarter.setOff();
-        fieldStarter.setFont(controlFont);
-
-        speedSlider = new Slider(control, "Speed");
-        speedSlider.setSize(showHeight, controlHeight/2);
-        speedSlider.setMin(0.5f);
-        speedSlider.setMax(3.0f);
-        speedSlider.setFont(controlFont);
-
-        viewButton = new Button(control, "Center");
-        viewButton.setSize(controlWidth,controlHeight);
-        viewButton.setLock(true);
-        viewButton.setFont(controlFont);
-        viewButton.addCallback(new CallbackListener() {
-            public void controlEvent(CallbackEvent e) {
-                switch(e.getAction()) {
-                    case(ControlP5.ACTION_PRESSED):viewButtonPressed();
-                }
-            }
-        });
-
-        saveFieldButton = new Button(control, "Save");
-        saveFieldButton.setSize(controlWidth,controlHeight);
-        saveFieldButton.setFont(controlFont);
-        saveFieldButton.addCallback(new CallbackListener() {
-            public void controlEvent(CallbackEvent e) {
-                switch(e.getAction()) {
-                    case(ControlP5.ACTION_PRESSED):saveButtonPressed();
-                }
-            }
-        });
-
-        loadFieldButton = new Button(control, "Load");
-        loadFieldButton.setSize(controlWidth,controlHeight);
-        loadFieldButton.setFont(controlFont);
-        loadFieldButton.addCallback(new CallbackListener() {
-            public void controlEvent(CallbackEvent e) {
-                switch(e.getAction()) {
-                    case(ControlP5.ACTION_PRESSED):loadButtonPressed();
-                }
-            }
-        });
-
-        newFieldButton = new Button(control, "New");
-        newFieldButton.setSize(controlWidth,controlHeight);
-        newFieldButton.setFont(controlFont);
-        newFieldButton.addCallback(new CallbackListener() {
-            public void controlEvent(CallbackEvent e) {
-                switch(e.getAction()) {
-                    case(ControlP5.ACTION_PRESSED):newButtonPressed();
-                }
-            }
-        });
     }
 
     public void render() {
-        pushMatrix();
-        translate(0, this.curHeight);
-        drawPanel();
-        drawControls();
-        popMatrix();
-    }
-
-    public void drawPanel() {
-        fill(255, 100);
-        stroke(27, 196, 245);
-        rect(0, 0, width-1, showHeight+10, 10);
+        panel.render();
     }
 
     public void drawControls() {
-        speedSlider.setPosition(hudColumn(0), hudRow(0));
-        viewButton.setPosition(hudColumn(0), hudRow(1));
-        newFieldButton.setPosition(hudColumn(1), hudRow(1));
-        loadFieldButton.setPosition(hudColumn(1), hudRow(2));
-        saveFieldButton.setPosition(hudColumn(1), hudRow(3));
-        sideToggle.setPosition(hudColumn(2), hudRow(1));
-        fieldStarter.setPosition(hudColumn(2), hudRow(2));
-        controllerToggle.setPosition(hudColumn(2), hudRow(3));
+        // speedSlider.setPosition(hudColumn(0), hudRow(0));
+        // viewButton.setPosition(hudColumn(0), hudRow(1));
+        // newFieldButton.setPosition(hudColumn(1), hudRow(1));
+        // loadFieldButton.setPosition(hudColumn(1), hudRow(2));
+        // saveFieldButton.setPosition(hudColumn(1), hudRow(3));
+        // sideToggle.setPosition(hudColumn(2), hudRow(1));
+        // fieldStarter.setPosition(hudColumn(2), hudRow(2));
+        // controllerToggle.setPosition(hudColumn(2), hudRow(3));
     }
 
     public void viewButtonPressed() {
-        switch(this.currentView) {
-            case FOLLOW :
-                viewButton.setLabel("Follow");
-                this.currentView = ViewMode.CENTER;
-                break;
-            case CENTER :
-                viewButton.setLabel("Center");
-                this.currentView = ViewMode.FOLLOW;
-                break;
-            case PAN :
-                viewButton.setLabel("Center");
-                this.currentView = ViewMode.FOLLOW;
-                break;
-        }
+        // switch(this.currentView) {
+        //     case FOLLOW :
+        //         viewButton.setLabel("Follow");
+        //         this.currentView = ViewMode.CENTER;
+        //         break;
+        //     case CENTER :
+        //         viewButton.setLabel("Center");
+        //         this.currentView = ViewMode.FOLLOW;
+        //         break;
+        //     case PAN :
+        //         viewButton.setLabel("Center");
+        //         this.currentView = ViewMode.FOLLOW;
+        //         break;
+        // }
     }
 
     public void newButtonPressed() {
@@ -862,6 +993,19 @@ class HUD {
 
     }
 
+    public void show() {
+        this.vis = true;
+        this.curHeight = lerp(this.curHeight, height-this.showHeight, 0.2f);
+        if (this.panel.view == null) {
+            panel.setView(ControlPanelLayout.DRAW_OR_LOAD);
+        }
+    }
+
+    public void hide() {
+        this.vis = false;
+        this.curHeight = lerp(this.curHeight, height+1, 0.1f);
+    }
+
     public float hudColumn(float columnNumber) {
         float xPosition = ((this.windowSize/100) + (columnNumber * (this.windowSize/10)));
         return xPosition;
@@ -872,17 +1016,106 @@ class HUD {
         return yPosition;
     }
 
-    public void show() {
-        this.vis = true;
-        this.curHeight = lerp(this.curHeight, height-this.showHeight, 0.2f);
+}
+class LayoutGrid {
+    int windowSize;
+    float numberOfColumns;
+    float numberOfRows;
+
+    LayoutGrid(int windowSize, int cols, int rows) {
+        this.windowSize = windowSize;
+        this.numberOfColumns = cols;
+        this.numberOfRows = rows;
     }
 
-    public void hide() {
-        this.vis = false;
-        this.curHeight = lerp(this.curHeight, height+1, 0.1f);
+    public PVector backButtonPosition() {
+        return new PVector(-25, (this.windowSize/10) - (this.windowSize/20));
     }
 
+    public PVector backButtonSize() {
+        int buttonWidth = this.windowSize/20;
+        int buttonHeight = this.windowSize/10;
+        return new PVector(buttonWidth, buttonHeight);
+    }
 
+    public PVector getCoords(int columnNumber, int rowNumber, ButtonSize buttonSize) {
+        float horizontalSpacing = getControlWidth(buttonSize) / 2;
+        float verticalSpacing = getControlHeight(buttonSize) / 2;
+        float x = getCoordForColumn(columnNumber) - horizontalSpacing;
+        float y = getCoordForRow(rowNumber) - verticalSpacing;
+        PVector buttonCoords = new PVector(x, y);
+        return buttonCoords;
+    }
+
+    public float getCoordForColumn(int colNumber) {
+        int columnWidth = getColumnWidth();
+        int columnMiddle = (columnWidth * colNumber) + (columnWidth / 2);
+        return columnMiddle;
+    }
+
+    public float getCoordForRow(int rowNumber) {
+        int rowHeight = getRowHeight();
+        int rowMiddle = (rowHeight * rowNumber) + (rowHeight / 2);
+        return rowMiddle;
+    }
+
+    public int getControlWidth(ButtonSize buttonSize) {
+        switch(buttonSize) {
+            case SMALL:
+                return smallControlWidth();
+            case MEDIUM:
+                return mediumControlWidth();
+            case LARGE:
+                return largeControlWidth();
+            default:
+                return 100;
+        }
+    }
+
+    public int getControlHeight(ButtonSize buttonSize) {
+        switch(buttonSize) {
+            case SMALL:
+                return smallControlHeight();
+            case MEDIUM:
+                return mediumControlHeight();
+            case LARGE:
+                return largeControlHeight();
+            default:
+                return 50;
+        }
+    }
+
+    public int smallControlWidth() {
+        return getColumnWidth()/10;
+    }
+
+    public int mediumControlWidth() {
+        return getColumnWidth()/5;
+    }
+
+    public int largeControlWidth() {
+        return getColumnWidth()/2;
+    }
+
+    public int smallControlHeight() {
+        return getRowHeight()/10;
+    }
+
+    public int mediumControlHeight() {
+        return getRowHeight()/5;
+    }
+
+    public int largeControlHeight() {
+        return getRowHeight()/2;
+    }
+
+    public int getRowHeight() {
+        return floor((this.windowSize/5) / this.numberOfRows);
+    }
+
+    public int getColumnWidth() {
+        return floor((this.windowSize) / this.numberOfColumns);
+    }
 }
 class Machine {
       PVector pos;
@@ -926,6 +1159,170 @@ class Machine {
         return this.angle;
     }
 }
+class StartingControls extends ControlView{
+
+    Button uiDrawButton;
+    Button uiLoadButton;
+
+    StartingControls(int windowSize) {
+        this.windowSize = windowSize;
+        this.layoutGrid = new LayoutGrid(this.windowSize, 2, 1);
+        this.controls = new String[2];
+
+        uiDrawButton = new Button(control, "Draw")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
+                .setSwitch(true)
+                .setOff()
+                .addCallback(new CallbackListener() {
+                    public void controlEvent(CallbackEvent e) {
+                        switch(e.getAction()) {
+                            case(ControlP5.ACTION_PRESSED):
+                                drawButtonPressed();
+                        }
+                    }
+                    });
+        this.controls[0] = uiDrawButton.getName();
+
+        uiLoadButton = new Button(control, "Load")
+                .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
+                         layoutGrid.getControlHeight(ButtonSize.LARGE))
+                .setSwitch(true)
+                .setOff()
+                .addCallback(new CallbackListener() {
+                    public void controlEvent(CallbackEvent e) {
+                        switch(e.getAction()) {
+                            case(ControlP5.ACTION_PRESSED):
+                                loadButtonPressed();
+                        }
+                    }
+                    });
+        this.controls[1] = uiLoadButton.getName();
+    }
+
+
+    public void render(float verticalPosition) {
+        drawControls(verticalPosition);
+
+    }
+
+    public void drawControls(float verticalPosition) {
+        PVector drawButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.LARGE);
+        PVector loadButtonPos = layoutGrid.getCoords(1, 0, ButtonSize.LARGE);
+        uiDrawButton.setPosition(drawButtonPos.x,
+                                 drawButtonPos.y + verticalPosition);
+        uiLoadButton.setPosition(loadButtonPos.x,
+                                 loadButtonPos.y + verticalPosition);
+    }
+
+    public void drawButtonPressed() {
+        this.controlPanel.setView(ControlPanelLayout.FIELD_DRAWING);
+    }
+
+    public void loadButtonPressed() {
+
+    }
+}
+// class TestView implements HudView {
+//     Slider speedSlider;
+//     Toggle sideToggle;
+//     Toggle controllerToggle;
+//     Button fieldStarter;
+//     Button viewButton;
+//     Button saveFieldButton;
+//     Button loadFieldButton;
+//     Button newFieldButton;
+//
+//
+//     TestView() {
+//         this.windowSize = windowSize;
+//         this.control = control;
+//         this.showHeight = windowSize/5;
+//         this.curHeight = height;
+//         this.currentView = ViewMode.FOLLOW;
+//         this.vis = false;
+//
+//         int controlWidth = showHeight/4;
+//         int controlHeight = showHeight/10;
+//         ControlFont controlFont = new ControlFont(createFont("Arial",controlHeight/2));
+//
+//         sideToggle = new Toggle(control, "Outside");
+//         sideToggle.setSize(controlWidth, controlHeight);
+//         sideToggle.setMode(ControlP5.SWITCH);
+//         sideToggle.setFont(controlFont);
+//
+//         controllerToggle = new Toggle(control, "Controller");
+//         controllerToggle.setSize(controlWidth, controlHeight);
+//         controllerToggle.setMode(ControlP5.SWITCH);
+//         controllerToggle.setValue(false);
+//         controllerToggle.setFont(controlFont);
+//
+//         fieldStarter = new Button(control, "Start");
+//         fieldStarter.setSize(controlWidth, controlHeight);
+//         fieldStarter.setSwitch(true);
+//         fieldStarter.setOff();
+//         fieldStarter.setFont(controlFont);
+//
+//         speedSlider = new Slider(control, "Speed");
+//         speedSlider.setSize(showHeight, controlHeight/2);
+//         speedSlider.setMin(0.5);
+//         speedSlider.setMax(3.0);
+//         speedSlider.setFont(controlFont);
+//
+//         viewButton = new Button(control, "Center");
+//         viewButton.setSize(controlWidth,controlHeight);
+//         viewButton.setLock(true);
+//         viewButton.setFont(controlFont);
+//         viewButton.addCallback(new CallbackListener() {
+//             public void controlEvent(CallbackEvent e) {
+//                 switch(e.getAction()) {
+//                     case(ControlP5.ACTION_PRESSED):viewButtonPressed();
+//                 }
+//             }
+//         });
+//
+//         saveFieldButton = new Button(control, "Save");
+//         saveFieldButton.setSize(controlWidth,controlHeight);
+//         saveFieldButton.setFont(controlFont);
+//         saveFieldButton.addCallback(new CallbackListener() {
+//             public void controlEvent(CallbackEvent e) {
+//                 switch(e.getAction()) {
+//                     case(ControlP5.ACTION_PRESSED):saveButtonPressed();
+//                 }
+//             }
+//         });
+//
+//         loadFieldButton = new Button(control, "Load");
+//         loadFieldButton.setSize(controlWidth,controlHeight);
+//         loadFieldButton.setFont(controlFont);
+//         loadFieldButton.addCallback(new CallbackListener() {
+//             public void controlEvent(CallbackEvent e) {
+//                 switch(e.getAction()) {
+//                     case(ControlP5.ACTION_PRESSED):loadButtonPressed();
+//                 }
+//             }
+//         });
+//
+//         newFieldButton = new Button(control, "New");
+//         newFieldButton.setSize(controlWidth,controlHeight);
+//         newFieldButton.setFont(controlFont);
+//         newFieldButton.addCallback(new CallbackListener() {
+//             public void controlEvent(CallbackEvent e) {
+//                 switch(e.getAction()) {
+//                     case(ControlP5.ACTION_PRESSED):newButtonPressed();
+//                 }
+//             }
+//         });
+//     }
+//
+//     void display() {
+//
+//     }
+//
+//     void initialize() {
+//
+//     }
+// }
 class Wheels {
     float steeringAngle;
     float drawAngle;

@@ -2,9 +2,9 @@
 // CSCI 410
 // Auto-Steer Simulation
 import controlP5.*;
-// import ViewModes;
+import java.util.Set;
 
-public Agent agent;
+Agent agent;
 HUD hud;
 Field field;
 int state;
@@ -31,53 +31,50 @@ void setup() {
   bx = 0;
   by = 0;
   scale = 1;
-  agent = new Agent();
-  hud = new HUD(this.verticalResolution, control);
+  hud = new HUD(this);
   state = 0;
   currentView = ViewMode.FOLLOW;
 }
 
 void draw() {
-    mouseListener();
     hudListener();
     background(0);
     pushMatrix();
     // stateListener();
-    drawView();
+    // drawView();
     if (field != null) {
         field.render();
     }
-    agent.render();
-    if (controller) {
-        agent.controller.control();
+    if (agent != null) {
+        agent.render();
     }
     popMatrix();
     hud.render();
 }
 
-void mouseListener() {
-    if (mouseY > (this.verticalResolution/10) * 9) {
-        hud.show();
-    }
-    else if (mouseY < (this.verticalResolution/10) * 7) {
-        hud.hide();
-    }
-}
-
 void mousePressed() {
-    if (this.field == null) {
-        this.field = new Field(mouseX, mouseY);
-        hud.currentView = ViewMode.FOLLOW;
-        return;
-    }
   xOffset = mouseX-bx;
   yOffset = mouseY-by;
+  if (this.field != null && this.field.waiting) {
+      if (control.getController("Place Field").isMouseOver()) {
+
+      } else {
+          this.field.beginDrawing(mouseX, mouseY);
+      }
+  }
+  if (this.agent != null && this.agent.placing) {
+      if (control.getController("Place Agent").isMouseOver()) {
+
+      } else {
+          this.agent.setStartingPosition(mouseX, mouseY);
+      }
+  }
 }
 
 void mouseDragged() {
     if (this.field == null) {
-        this.field = new Field(mouseX, mouseY);
-        hud.currentView = ViewMode.FOLLOW;
+        // this.field = new Field(mouseX, mouseY);
+        // hud.currentView = ViewMode.FOLLOW;
     } else if (this.field.drawing) {
         return;
     } else if (!hud.vis) {
@@ -99,14 +96,9 @@ void mouseWheel(MouseEvent event) {
 }
 
 void hudListener() {
-    agent.wheels.speedMult = hud.speedSlider.getValue();
-    if (hud.fieldStarter.isPressed()) {
-    }
-    if (hud.controllerToggle.getState()) {
-        controller = true;
-    } else {
-        controller = false;
-    }
+    // if (this.hud.placingField) {
+    //     this.field = new field();
+    // }
 }
 
 void drawView() {
@@ -125,11 +117,11 @@ void drawView() {
 }
 
 void pan() {
-    hud.viewButton.setLabel("Follow");
-    translate(bx, by);
-    if (field != null && !field.drawing) {
-        zoom(field.center.x, field.center.y);
-    }
+    // hud.viewButton.setLabel("Follow");
+    // translate(bx, by);
+    // if (field != null && !field.drawing) {
+    //     zoom(field.center.x, field.center.y);
+    // }
 }
 
 void follow() {
@@ -172,7 +164,7 @@ void keyPressed() {
     } else if (keyCode == DOWN) {
         agent.halt();
     } else if (key == ' ') {
-        field = new Field(mouseX, mouseY);
+        // field = new Field();
         hud.currentView = ViewMode.FOLLOW;
     }
 }
