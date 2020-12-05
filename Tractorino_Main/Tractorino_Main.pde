@@ -2,9 +2,9 @@
 // CSCI 410
 // Auto-Steer Simulation
 import controlP5.*;
-// import ViewModes;
+import java.util.Set;
 
-public Agent agent;
+Agent agent;
 HUD hud;
 Field field;
 int state;
@@ -31,14 +31,13 @@ void setup() {
   bx = 0;
   by = 0;
   scale = 1;
-  agent = new Agent();
-  hud = new HUD(this.verticalResolution, control);
+  hud = new HUD(this);
   state = 0;
   currentView = ViewMode.FOLLOW;
 }
 
 void draw() {
-    // hudListener();
+    hudListener();
     background(0);
     pushMatrix();
     // stateListener();
@@ -46,7 +45,9 @@ void draw() {
     if (field != null) {
         field.render();
     }
-    agent.render();
+    if (agent != null) {
+        agent.render();
+    }
     popMatrix();
     hud.render();
 }
@@ -54,12 +55,26 @@ void draw() {
 void mousePressed() {
   xOffset = mouseX-bx;
   yOffset = mouseY-by;
+  if (this.field != null && this.field.waiting) {
+      if (control.getController("Place Field").isMouseOver()) {
+
+      } else {
+          this.field.beginDrawing(mouseX, mouseY);
+      }
+  }
+  if (this.agent != null && this.agent.placing) {
+      if (control.getController("Place Agent").isMouseOver()) {
+
+      } else {
+          this.agent.setStartingPosition(mouseX, mouseY);
+      }
+  }
 }
 
 void mouseDragged() {
     if (this.field == null) {
-        this.field = new Field(mouseX, mouseY);
-        hud.currentView = ViewMode.FOLLOW;
+        // this.field = new Field(mouseX, mouseY);
+        // hud.currentView = ViewMode.FOLLOW;
     } else if (this.field.drawing) {
         return;
     } else if (!hud.vis) {
@@ -81,13 +96,8 @@ void mouseWheel(MouseEvent event) {
 }
 
 void hudListener() {
-    // agent.wheels.speedMult = hud.speedSlider.getValue();
-    // if (hud.fieldStarter.isPressed()) {
-    // }
-    // if (hud.controllerToggle.getState()) {
-    //     controller = true;
-    // } else {
-    //     controller = false;
+    // if (this.hud.placingField) {
+    //     this.field = new field();
     // }
 }
 
@@ -154,7 +164,7 @@ void keyPressed() {
     } else if (keyCode == DOWN) {
         agent.halt();
     } else if (key == ' ') {
-        field = new Field(mouseX, mouseY);
+        // field = new Field();
         hud.currentView = ViewMode.FOLLOW;
     }
 }
