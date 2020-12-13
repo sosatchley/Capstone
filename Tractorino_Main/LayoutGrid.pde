@@ -3,8 +3,8 @@ class LayoutGrid {
     float numberOfColumns;
     float numberOfRows;
 
-    LayoutGrid(int windowSize, int cols, int rows) {
-        this.windowSize = windowSize;
+    LayoutGrid(int cols, int rows) {
+        this.windowSize = verticalResolution;
         this.numberOfColumns = cols;
         this.numberOfRows = rows;
     }
@@ -22,32 +22,37 @@ class LayoutGrid {
     PVector getCoords(int columnNumber, int rowNumber, ButtonSize buttonSize) {
         float horizontalSpacing = getControlWidth(buttonSize) / 2;
         float verticalSpacing = getControlHeight(buttonSize) / 2;
-        float x = getCoordForColumn(columnNumber) - horizontalSpacing;
+        float x = getCoordForColumn(columnNumber);
         float y = getCoordForRow(rowNumber) - verticalSpacing;
         PVector buttonCoords = new PVector(x, y);
         return buttonCoords;
     }
 
     float getCoordForColumn(int colNumber) {
-        int columnWidth = getColumnWidth();
-        int columnMiddle = (columnWidth * colNumber) + (columnWidth / 2);
-        return columnMiddle;
+        float controlWidth = getControlWidth();
+        float whiteSpace = this.windowSize * 0.25;
+        float spacing = whiteSpace / (this.numberOfColumns + 1);
+        return ((controlWidth * colNumber) + (spacing * (colNumber+1)));
     }
 
     float getCoordForRow(int rowNumber) {
-        int rowHeight = getRowHeight();
+        int rowHeight = (int)getRowHeight();
         int rowMiddle = (rowHeight * rowNumber) + (rowHeight / 2);
         return rowMiddle;
+    }
+
+    int getControlWidth() {
+        return floor(largeControlWidth());
     }
 
     int getControlWidth(ButtonSize buttonSize) {
         switch(buttonSize) {
             case SMALL:
-                return smallControlWidth();
+                return floor(smallControlWidth());
             case MEDIUM:
-                return mediumControlWidth();
+                return floor(mediumControlWidth());
             case LARGE:
-                return largeControlWidth();
+                return floor(largeControlWidth());
             default:
                 return 100;
         }
@@ -56,45 +61,45 @@ class LayoutGrid {
     int getControlHeight(ButtonSize buttonSize) {
         switch(buttonSize) {
             case SMALL:
-                return smallControlHeight();
+                return floor(smallControlHeight());
             case MEDIUM:
-                return mediumControlHeight();
+                return floor(mediumControlHeight());
             case LARGE:
-                return largeControlHeight();
+                return floor(largeControlHeight());
             default:
                 return 50;
         }
     }
 
-    int smallControlWidth() {
+    float smallControlWidth() {
         return getColumnWidth()/10;
     }
 
-    int mediumControlWidth() {
+    float mediumControlWidth() {
         return getColumnWidth()/5;
     }
 
-    int largeControlWidth() {
-        return getColumnWidth()/2;
+    float largeControlWidth() {
+        return getColumnWidth() * 0.75;
     }
 
-    int smallControlHeight() {
+    float smallControlHeight() {
         return getRowHeight()/10;
     }
 
-    int mediumControlHeight() {
+    float mediumControlHeight() {
         return getRowHeight()/5;
     }
 
-    int largeControlHeight() {
+    float largeControlHeight() {
         return getRowHeight()/2;
     }
 
-    int getRowHeight() {
+    float getRowHeight() {
         return floor((this.windowSize/5) / this.numberOfRows);
     }
 
-    int getColumnWidth() {
+    float getColumnWidth() {
         return floor((this.windowSize) / this.numberOfColumns);
     }
 }

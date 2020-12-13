@@ -12,7 +12,7 @@ class ControlPanel {
         this.showHeight = windowSize/5;
         this.curHeight = height;
         this.view = new ControlView(this);
-        this.lock = ControlPanelLock.NONE;
+        this.lock = ControlPanelLock.SHOW;
     }
 
     void render() {

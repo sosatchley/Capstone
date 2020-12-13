@@ -31,8 +31,8 @@ class ControlView {
     ControlView(ControlPanel panel) {
         this.controlPanel = panel;
         this.windowSize = verticalResolution;
-        setLayoutGrid(ControlPanelLayout.DRAW_OR_LOAD);
         initializeControls();
+        setCurrentLayout(ControlPanelLayout.DRAW_OR_LOAD);
     }
 
     public void setCurrentLayout(ControlPanelLayout newLayout) {
@@ -71,10 +71,10 @@ class ControlView {
     private void setLayoutGrid(ControlPanelLayout layout) {
         switch(layout) {
             case DRAW_OR_LOAD:
-                this.layoutGrid = new LayoutGrid(this.windowSize, 2, 1);
+                this.layoutGrid = new LayoutGrid(2, 1);
                 break;
             case FIELD_DRAWING:
-                this.layoutGrid = new LayoutGrid(this.windowSize, 3, 1);
+                this.layoutGrid = new LayoutGrid(3, 1);
                 break;
         }
     }
@@ -102,6 +102,7 @@ class ControlView {
 
     private void initializeStartingControls() {
         this.startingControls = new String[2];
+        setLayoutGrid(ControlPanelLayout.DRAW_OR_LOAD);
 
         uiDrawButton = new Button(control, "Draw")
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
@@ -150,6 +151,7 @@ class ControlView {
 
     private void initializeDrawingControls() {
         this.drawingControls = new String[6];
+        setLayoutGrid(ControlPanelLayout.FIELD_DRAWING);
 
         this.uiFieldButton = new Button(control, "Place Field")
                 .hide()
@@ -166,6 +168,7 @@ class ControlView {
                         }
                     }
                     });
+        println(this.uiFieldButton.getWidth());
         this.drawingControls[0] = uiFieldButton.getName();
 
         this.uiObstacleButton = new Button(control, "Place Obstacle")
