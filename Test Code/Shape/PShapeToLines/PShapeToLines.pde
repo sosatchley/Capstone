@@ -118,7 +118,16 @@ void test() {
 
 void updateShape(float x, float y) {
     if (!fieldComplete(x, y)) {
-        this.shape.vertex(x,y);
+        int count = this.shape.getVertexCount();
+        if (count == 0) {
+            this.shape.vertex(x,y);
+        } else {
+            PVector lastVert = new PVector(this.shape.getVertexX(count-1),
+                                           this.shape.getVertexY(count-1));
+            if (dist(lastVert.x, lastVert.y, x, y) > 5) {
+                this.shape.vertex(x,y);
+            }
+        }
         // point(x,y);
     }
 }

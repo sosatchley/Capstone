@@ -52,9 +52,20 @@ class Field {
 
     void updateShape(float x, float y) {
         if (!complete(x, y)) {
-            this.shape.vertex(x, y);
-            updateBoundaries(x, y);
+            PVector lastVert = this.getLastAddedVertex();
+            if (lastVert == null) {
+                this.addVertex(x, y);
+            } else {
+                if (dist(lastVert.x, lastVert.y, x, y) > 5) {
+                    this.addVertex(x, y);
+                }
+            }
         }
+    }
+
+    private void addVertex(float x, float y) {
+        this.shape.vertex(x, y);
+        updateBoundaries(x, y);
     }
 
     void updateBoundaries(float x, float y) {
@@ -69,6 +80,16 @@ class Field {
         }
         if (this.maxY < y) {
             this.maxY = y;
+        }
+    }
+
+    private PVector getLastAddedVertex() {
+        int count = this.shape.getVertexCount();
+        if (count == 0) {
+            return null;
+        } else {
+            return new PVector(this.shape.getVertexX(count-1),
+                               this.shape.getVertexY(count-1));
         }
     }
 
@@ -193,7 +214,6 @@ class Field {
         }
         lowerResolutionShape.endShape(CLOSE);
         this.shape = lowerResolutionShape;
-        println(this.shape.getVertexCount());
     }
 
     float getOriginalVertexX(int index) {
