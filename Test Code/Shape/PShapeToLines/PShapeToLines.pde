@@ -45,7 +45,11 @@ void draw() {
     drawRays();
 }
 void mousePressed() {
-    test();
+    if (this.shape == null) {
+        test();
+    } else {
+        println(mouseInShape());
+    }
 }
 
 void mouseWheel(MouseEvent event) {
@@ -87,6 +91,16 @@ void keyPressed() {
                 return;
         }
     }
+}
+
+boolean mouseInShape() {
+    java.awt.Polygon p = new java.awt.Polygon();
+    for (int i = 0; i < this.shape.getVertexCount(); i++) {
+        int x = Math.round(this.shape.getVertexX(i));
+        int y = Math.round(this.shape.getVertexY(i));
+        p.addPoint(x, y);
+    }
+    return (p.contains(Math.round(mouseX), Math.round(mouseY)));
 }
 
 void test() {

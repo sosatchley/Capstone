@@ -7,6 +7,7 @@ import java.util.Set;
 Agent agent;
 HUD hud;
 Field field;
+Error err;
 int state;
 int verticalResolution;
 float bx;
@@ -50,23 +51,31 @@ void draw() {
     }
     popMatrix();
     hud.render();
+    if (err != null) {
+        err.render();
+    }
 }
 
-void mousePressed() {
-  xOffset = mouseX-bx;
-  yOffset = mouseY-by;
+void mousePressed(MouseEvent click) {
+    float clickX = click.getX();
+    float clickY = click.getY();
+  xOffset = clickX-bx;
+  yOffset = clickY-by;
   if (this.field != null && this.field.waiting) {
       if (control.getController("Place Field").isMouseOver()) {
 
       } else {
-          this.field.beginDrawing(mouseX, mouseY);
+          this.field.beginDrawing(clickX, clickY);
       }
   }
   if (this.agent != null && this.agent.placing) {
       if (control.getController("Place Agent").isMouseOver()) {
-
       } else {
-          this.agent.setStartingPosition(mouseX, mouseY);
+          if (field.pointIsInField(clickX, clickY)) {
+              this.agent.setStartingPosition(clickX, clickY);
+          } else {
+              this.err = new Error(clickX, clickY, ErrorCode.AGENT_PLACEMENT);
+          }
       }
   }
 }
@@ -174,8 +183,8 @@ void keyReleased() {
 }
 
 void exit() {
-  if (this.agent.controller.QTable != null) {
-    this.agent.controller.printQ();
-  }
+  // if (this.agent.controller.QTable != null) {
+    // this.agent.controller.printQ();
+  // }
   super.exit();
 }

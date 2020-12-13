@@ -203,4 +203,15 @@ class Field {
     float getOriginalVertexY(int index) {
         return this.originalVertices[index][1];
     }
+
+    boolean pointIsInField(float x, float y) {
+        java.awt.Polygon p = new java.awt.Polygon();
+        p.invalidate();
+        for (int i = 0; i < this.shape.getVertexCount(); i++) {
+            int vertX = Math.round(this.shape.getVertexX(i));
+            int vertY = Math.round(this.shape.getVertexY(i));
+            p.addPoint(vertX, vertY);
+        }
+        return (p.contains(Math.round(x), Math.round(y)));
+    }
 }
