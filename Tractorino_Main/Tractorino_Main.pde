@@ -59,26 +59,26 @@ void draw() {
 void mousePressed(MouseEvent click) {
     float clickX = click.getX();
     float clickY = click.getY();
-  xOffset = clickX-bx;
-  yOffset = clickY-by;
-  if (this.field != null && this.field.waiting) {
-      if (control.getController("Place Field").isMouseOver()) {
-
-      } else {
-          this.field.beginDrawing(clickX, clickY);
-      }
-  }
-  if (this.agent != null && this.agent.placing) {
-      if (control.getController("Place Agent").isMouseOver()) {
-      } else {
-          if (field.pointIsInField(clickX, clickY)) {
-              this.agent.setStartingPosition(clickX, clickY);
-          } else {
-              this.err = new Error(clickX, clickY, ErrorCode.AGENT_PLACEMENT);
-          }
-      }
-  }
+    xOffset = clickX-bx;
+    yOffset = clickY-by;
+    if (this.field != null && this.field.waiting) {
+        if (control.getController("Place Field").isMouseOver()) {
+        } else {
+            this.field.beginDrawing(clickX, clickY);
+        }
+    }
+    if (this.agent != null && this.agent.placing) {
+        if (control.getController("Place Agent").isMouseOver()) {
+        } else {
+            if (field.pointIsInField(clickX, clickY)) {
+                this.agent.setStartingPosition(clickX, clickY);
+            } else {
+                this.err = new Error(clickX, clickY, ErrorCode.AGENT_PLACEMENT);
+            }
+        }
+    }
 }
+
 
 void mouseDragged() {
     if (this.field == null) {
@@ -101,6 +101,21 @@ void mouseWheel(MouseEvent event) {
         scale = .5;
     } else if (scale > 3.5) {
         scale = 3.5;
+    }
+}
+
+void keyPressed() {
+    if (keyCode == RIGHT) {
+        agent.turn(1);
+    } else if (keyCode == LEFT) {
+        agent.turn(0);
+    } else if (keyCode == UP) {
+        agent.roll();
+    } else if (keyCode == DOWN) {
+        agent.halt();
+    } else if (key == ' ') {
+        // field = new Field();
+        hud.currentView = ViewMode.FOLLOW;
     }
 }
 
@@ -161,21 +176,6 @@ void zoom(float x, float y) {
     translate(x, y);
     scale(scale);
     translate(-x, -y);
-}
-
-void keyPressed() {
-    if (keyCode == RIGHT) {
-        agent.turn(1);
-    } else if (keyCode == LEFT) {
-        agent.turn(0);
-    } else if (keyCode == UP) {
-        agent.roll();
-    } else if (keyCode == DOWN) {
-        agent.halt();
-    } else if (key == ' ') {
-        // field = new Field();
-        hud.currentView = ViewMode.FOLLOW;
-    }
 }
 
 void keyReleased() {

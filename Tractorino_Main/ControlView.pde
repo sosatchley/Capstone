@@ -168,7 +168,6 @@ class ControlView {
                         }
                     }
                     });
-        println(this.uiFieldButton.getWidth());
         this.drawingControls[0] = uiFieldButton.getName();
 
         this.uiObstacleButton = new Button(control, "Place Obstacle")

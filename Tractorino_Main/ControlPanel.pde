@@ -38,13 +38,6 @@ class ControlPanel {
     }
 
     void keyPressed() {
-        if (keyCode == DOWN) {
-            println("View 1");
-            setView(ControlPanelLayout.DRAW_OR_LOAD);
-        } else if (keyCode == UP) {
-            println("View 2");
-            setView(ControlPanelLayout.FIELD_DRAWING);
-        }
     }
 
     void setLock(ControlPanelLock lock) {
