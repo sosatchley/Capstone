@@ -1,3 +1,4 @@
+import controlP5.*;
 class ControlPanel {
     HUD hud;
     ControlView view;
@@ -16,7 +17,7 @@ class ControlPanel {
     }
 
     void render() {
-        mouseEvent();
+        showOrHide();
         keyPressed();
         pushMatrix();
         translate(0, this.curHeight);
@@ -38,6 +39,14 @@ class ControlPanel {
     }
 
     void keyPressed() {
+    }
+
+    Controller[] getVisibleControls() {
+        return this.view.getCurrentControlSet();
+    }
+
+    boolean isMouseOver() {
+        return (mouseY > this.curHeight);
     }
 
     void setLock(ControlPanelLock lock) {
@@ -66,7 +75,7 @@ class ControlPanel {
         this.curHeight = lerp(this.curHeight, height+1, 0.1);
     }
 
-    void mouseEvent() {
+    void showOrHide() {
         if (isLocked()) {
             return;
         } else {

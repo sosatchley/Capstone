@@ -10,7 +10,11 @@ class LayoutGrid {
     }
 
     PVector backButtonPosition() {
-        return new PVector(-25, (this.windowSize/10) - (this.windowSize/20));
+        return new PVector(-backButtonSize().x/2, (this.windowSize/20));
+    }
+
+    PVector forwardButtonPosition() {
+        return new PVector(width-backButtonSize().x/2, (this.windowSize/20));
     }
 
     PVector backButtonSize() {

@@ -1,3 +1,5 @@
+import java.util.HashMap;
+
 class ControlView {
     int windowSize;
 
@@ -11,7 +13,13 @@ class ControlView {
 
     public ControlPanelLayout currentLayout;
 
+    private ControlPanelLayout previousLayout;
+
     private float verticalPosition;
+
+    private Button uiBackButton;
+
+    private Button uiForwardButton;
 
 // Starting controls
     Button uiDrawButton;
@@ -40,8 +48,19 @@ class ControlView {
             setLayoutVisibility(this.currentLayout, false);
         }
         setLayoutVisibility(newLayout, true);
+        this.previousLayout = this.currentLayout;
         this.currentLayout = newLayout;
         setLayoutGrid(newLayout);
+    }
+
+    public void showPreviousLayout() {
+        if (this.previousLayout != null) {
+            setCurrentLayout(this.previousLayout);
+        }
+    }
+
+    public ControlPanelLayout getCurrentLayout() {
+        return this.currentLayout;
     }
 
     private void setLayoutVisibility(ControlPanelLayout layout, boolean flag) {
@@ -55,6 +74,15 @@ class ControlView {
             }
 
         }
+    }
+
+    public Controller[] getCurrentControlSet() {
+        String[] controlNames = getControlSet(this.getCurrentLayout());
+        Controller[] controls = new Controller[controlNames.length];
+        for (int i = 0; i < controlNames.length; i++) {
+            controls[i] = control.getController(controlNames[i]);
+        }
+        return controls;
     }
 
     private String[] getControlSet(ControlPanelLayout layout) {
@@ -96,6 +124,8 @@ class ControlView {
     }
 
     private void initializeControls() {
+        this.uiBackButton = initializeBackButton().hide();
+        this.uiForwardButton = initializeForwardButton().hide();
         initializeStartingControls();
         initializeDrawingControls();
     }
@@ -141,6 +171,8 @@ class ControlView {
 
     private void renderStartingControls() {
         float verticalPosition = this.verticalPosition;
+
+        // drawBackButton(verticalPosition);
         PVector drawButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.LARGE);
         PVector loadButtonPos = layoutGrid.getCoords(1, 0, ButtonSize.LARGE);
         this.uiDrawButton.setPosition(drawButtonPos.x,
@@ -150,12 +182,12 @@ class ControlView {
     }
 
     private void initializeDrawingControls() {
-        this.drawingControls = new String[6];
+        this.drawingControls = new String[8];
         setLayoutGrid(ControlPanelLayout.FIELD_DRAWING);
 
         this.uiFieldButton = new Button(control, "Place Field")
                 .hide()
-                .setSwitch(true)
+                .setSwitch(false)
                 .setOff()
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
                          layoutGrid.getControlHeight(ButtonSize.LARGE))
@@ -172,7 +204,7 @@ class ControlView {
 
         this.uiObstacleButton = new Button(control, "Place Obstacle")
                 .hide()
-                .setSwitch(true)
+                .setSwitch(false)
                 .setOff()
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
                          layoutGrid.getControlHeight(ButtonSize.LARGE))
@@ -181,7 +213,6 @@ class ControlView {
                         switch(e.getAction()) {
                             case(ControlP5.ACTION_PRESS):
                                 println("Obstacle button doesn't work yet. ");
-                                println(uiObstacleType.isOpen());
                         }
                     }
                     });
@@ -189,7 +220,7 @@ class ControlView {
 
         this.uiAgentButton = new Button(control, "Place Agent")
                 .hide()
-                .setSwitch(true)
+                .setSwitch(false)
                 .setOff()
                 .setSize(layoutGrid.getControlWidth(ButtonSize.LARGE),
                          layoutGrid.getControlHeight(ButtonSize.LARGE))
@@ -219,7 +250,7 @@ class ControlView {
 
         this.uiResolutionSlider = new Slider(control, "fieldResolution")
                 .hide()
-                .setRange(1,10) // values can range from big to small as well
+                .setRange(1,10)
                 .setValue(1)
                 .setNumberOfTickMarks(10)
                 .setSliderMode(Slider.FLEXIBLE)
@@ -233,12 +264,16 @@ class ControlView {
                     }
                 });
         this.drawingControls[5] = uiResolutionSlider.getName();
+        this.drawingControls[6] = uiBackButton.getName();
+        this.drawingControls[7] = uiForwardButton.getName();
 
         renderDrawingControls();
     }
 
     private void renderDrawingControls() {
         float verticalPosition = this.verticalPosition;
+        drawBackButton(verticalPosition);
+        drawForwardButton(verticalPosition);
 
         PVector fieldButtonPos = layoutGrid.getCoords(0, 0, ButtonSize.LARGE);
         this.uiFieldButton.setPosition(fieldButtonPos.x,
@@ -258,7 +293,7 @@ class ControlView {
         PVector resolutionSliderPos = layoutGrid.getCoords(0, 0, ButtonSize.LARGE);
         this.uiResolutionSlider.setPosition(resolutionSliderPos.x,
                                            (resolutionSliderPos.y - layoutGrid.getControlHeight(ButtonSize.SMALL)) + verticalPosition);
-    }
+        }
 
     private void drawButtonPressed() {
         setCurrentLayout(ControlPanelLayout.FIELD_DRAWING);
@@ -291,5 +326,50 @@ class ControlView {
     void resetAgentButton() {
         this.uiAgentButton.setOff();
         this.controlPanel.setLock(ControlPanelLock.SHOW);
+    }
+
+    Button initializeBackButton() {
+        setLayoutGrid(ControlPanelLayout.FIELD_DRAWING);
+        Button backButton;
+        PVector buttonSize = layoutGrid.backButtonSize();
+        backButton = new Button(control, "back")
+                        .setSize(floor(buttonSize.x), floor(buttonSize.y))
+                        .addCallback(new CallbackListener() {
+                            public void controlEvent(CallbackEvent e) {
+                                switch(e.getAction()) {
+                                    case(ControlP5.ACTION_RELEASED):
+                                        showPreviousLayout();
+                                }
+                            }
+                            });
+        backButton.setView(new BackButton(backButton));
+        return backButton;
+    }
+
+    Button initializeForwardButton() {
+        setLayoutGrid(ControlPanelLayout.FIELD_DRAWING);
+        Button forwardButton;
+        PVector buttonSize = layoutGrid.backButtonSize();
+        forwardButton = new Button(control, "forward")
+                        .setSize(floor(buttonSize.x), floor(buttonSize.y))
+                        .addCallback(new CallbackListener() {
+                            public void controlEvent(CallbackEvent e) {
+                                switch(e.getAction()) {
+                                    case(ControlP5.ACTION_RELEASED):
+                                }
+                            }
+                            });
+        forwardButton.setView(new NextButton(forwardButton));
+        return forwardButton;
+    }
+
+    void drawBackButton(float verticalPosition) {
+        PVector pos = layoutGrid.backButtonPosition();
+        uiBackButton.setPosition(pos.x, pos.y + verticalPosition);
+    }
+
+    void drawForwardButton(float verticalPosition) {
+        PVector pos = layoutGrid.forwardButtonPosition();
+        uiForwardButton.setPosition(pos.x, pos.y + verticalPosition);
     }
 }

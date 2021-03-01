@@ -24,6 +24,10 @@ class HUD {
         panel.render();
     }
 
+    boolean isMouseOver() {
+        return panel.isMouseOver();
+    }
+
     void drawControls() {
         // speedSlider.setPosition(hudColumn(0), hudRow(0));
         // viewButton.setPosition(hudColumn(0), hudRow(1));
