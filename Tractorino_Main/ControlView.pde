@@ -212,7 +212,7 @@ class ControlView {
                     public void controlEvent(CallbackEvent e) {
                         switch(e.getAction()) {
                             case(ControlP5.ACTION_PRESS):
-                                println("Obstacle button doesn't work yet. ");
+                                obstacleButtonPressed();
                         }
                     }
                     });
@@ -234,11 +234,18 @@ class ControlView {
                     });
         this.drawingControls[2] = uiAgentButton.getName();
 
+        Map<String, Object> obstacleMap = new HashMap<String, Object>();
+        for (ObstacleMaker maker: ObstacleMaker.values()) {
+            obstacleMap.put(maker.toString(), (Object)maker);
+        }
         this.uiObstacleType = new ScrollableList(control, "Obstacle Type")
                 .hide()
                 .close()
                 .setWidth(layoutGrid.getControlWidth(ButtonSize.LARGE))
-                .setBarHeight(layoutGrid.getControlHeight(ButtonSize.SMALL));
+                .setBarHeight(layoutGrid.getControlHeight(ButtonSize.SMALL))
+                .setItemHeight(layoutGrid.getControlHeight(ButtonSize.SMALL))
+                .addItems(obstacleMap)
+                .setValue(0);
         this.drawingControls[3] = uiObstacleType.getName();
 
         Map<String, Object> cutterMap = new HashMap<String, Object>();
@@ -300,7 +307,12 @@ class ControlView {
         PVector resolutionSliderPos = layoutGrid.getCoords(0, 0, ButtonSize.LARGE);
         this.uiResolutionSlider.setPosition(resolutionSliderPos.x,
                                            (resolutionSliderPos.y - layoutGrid.getControlHeight(ButtonSize.SMALL)) + verticalPosition);
+        if (waitingShape != null && waitingShape.shape != null) {
+            uiResolutionSlider.show();
+        } else {
+            uiResolutionSlider.hide();
         }
+    }
 
     private void drawButtonPressed() {
         setCurrentLayout(ControlPanelLayout.FIELD_DRAWING);
@@ -313,6 +325,12 @@ class ControlView {
     private void fieldButtonPressed() {
         this.controlPanel.setLock(ControlPanelLock.HIDE);
         this.controlPanel.initializeField();
+    }
+
+    private void obstacleButtonPressed() {
+        int selectedIndex = (int)uiObstacleType.getValue();
+        ObstacleMaker maker = (ObstacleMaker) uiObstacleType.getItem(selectedIndex).get("value");
+        this.controlPanel.addObstacle(maker);
     }
 
     private void agentButtonPressed() {
@@ -329,6 +347,10 @@ class ControlView {
         this.uiFieldButton.setOff();
         this.uiResolutionSlider.show();
         this.controlPanel.setLock(ControlPanelLock.SHOW);
+    }
+
+    void resetResolutionSlider() {
+        this.uiResolutionSlider.setValue(1);
     }
 
     void resetAgentButton() {

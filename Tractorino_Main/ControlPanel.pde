@@ -90,17 +90,40 @@ class ControlPanel {
 
     void initializeField() {
         field = new Field();
+        waitingShape = field;
     }
 
-    void initializeAgent() {
-        agent = new Agent();
+    void addObstacle(ObstacleMaker obstacleType) {
+        this.setLock(ControlPanelLock.HIDE);
+        Obstacle obstacle;
+        switch(obstacleType) {
+          case REGION:
+            obstacle = new ObstacleRegion();
+            break;
+          case POINT:
+            obstacle = new ObstaclePoint();
+            break;
+          default:
+            return;
+        }
+        field.addObstacle(obstacle);
+        setWaitingShape((DrawnRegion)obstacle);
+    }
+
+    void setWaitingShape(DrawnRegion shape) {
+        waitingShape = null;
+        view.resetResolutionSlider();
+        waitingShape = shape;
+    }
+
     void addAgent(CutterMaker cutterType) {
         this.setLock(ControlPanelLock.HIDE);
         agent = new Agent(cutterType);
     }
 
     void fieldReady() {
-        view.resetFieldButton();
+        this.setLock(ControlPanelLock.SHOW);
+        // view.resetFieldButton();
     }
 
     void agentReady() {
@@ -108,7 +131,9 @@ class ControlPanel {
     }
 
     void changeFieldResolution(int value) {
-        field.reduceShapeResolutionByFactor(value);
+        if (waitingShape != null) {
+            waitingShape.reduceShapeResolutionByFactor(value);
+        }
     }
 
 }

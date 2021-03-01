@@ -19,11 +19,12 @@ float yOffset = 0.0;
 boolean controller = false;
 ControlP5 control;
 ViewMode currentView;
+DrawnRegion waitingShape;
 
 void settings() {
     this.verticalResolution = (displayHeight/10) * 9;
+    // this.verticalResolution = 500;
     size(verticalResolution, verticalResolution);
-    // size(1000, 1000);
 }
 
 void setup() {
@@ -63,15 +64,11 @@ void mousePressed(MouseEvent click) {
     float clickY = click.getY();
     xOffset = clickX-bx;
     yOffset = clickY-by;
-    if (this.field != null && this.field.waiting) {
-        if (control.getController("Place Field").isMouseOver()) {
-        } else {
-            this.field.beginDrawing(clickX, clickY);
+    if (!hud.isMouseOver()) {
+        if (waitingShape != null && waitingShape.waiting) {
+            waitingShape.beginDrawing(clickX, clickY);
         }
-    }
-    if (this.agent != null && this.agent.placing) {
-        if (control.getController("Place Agent").isMouseOver()) {
-        } else {
+        if (this.agent != null && this.agent.placing) {
             if (field.pointIsInField(clickX, clickY)) {
                 this.agent.setStartingPosition(clickX, clickY);
             } else {
@@ -80,7 +77,6 @@ void mousePressed(MouseEvent click) {
         }
     }
 }
-
 
 void mouseDragged() {
     if (this.field == null) {
@@ -116,6 +112,8 @@ void keyPressed() {
     } else if (keyCode == DOWN) {
         agent.halt();
     } else if (key == ' ') {
+        // hud.viewButtonPressed();
+    } else if (keyCode == ESC) {
         // field = new Field();
         hud.currentView = ViewMode.FOLLOW;
     }
@@ -128,18 +126,18 @@ void hudListener() {
 }
 
 void drawView() {
-    println(hud.currentView);
-    switch(hud.currentView) {
-        case PAN :
-            pan();
-            break;
-        case FOLLOW :
-            follow();
-            break;
-        case CENTER :
-            reset();
-            break;
-    }
+    // println(hud.currentView);
+    // switch(hud.currentView) {
+    //     case PAN :
+    //         pan();
+    //         break;
+    //     case FOLLOW :
+    //         follow();
+    //         break;
+    //     case CENTER :
+    //         reset();
+    //         break;
+    // }
 }
 
 void pan() {
@@ -160,7 +158,7 @@ void follow() {
 }
 
 void reset() {
-    if (field == null) {
+    if (field == null || field.waiting || field.drawing) {
         bx = 0;
         by = 0;
         translate(bx, by);
@@ -182,6 +180,12 @@ void zoom(float x, float y) {
 
 void keyReleased() {
     //Record wheel to machine heading ratio at end of turn, turn wheels after release to maintain ratio
+}
+
+void clearCanvas() {
+    this.field = null;
+    this.agent = null;
+    this.waitingShape = null;
 }
 
 void exit() {
