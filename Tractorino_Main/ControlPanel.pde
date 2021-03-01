@@ -94,6 +94,9 @@ class ControlPanel {
 
     void initializeAgent() {
         agent = new Agent();
+    void addAgent(CutterMaker cutterType) {
+        this.setLock(ControlPanelLock.HIDE);
+        agent = new Agent(cutterType);
     }
 
     void fieldReady() {

@@ -241,11 +241,18 @@ class ControlView {
                 .setBarHeight(layoutGrid.getControlHeight(ButtonSize.SMALL));
         this.drawingControls[3] = uiObstacleType.getName();
 
+        Map<String, Object> cutterMap = new HashMap<String, Object>();
+        for (CutterMaker maker: CutterMaker.values()) {
+            cutterMap.put(maker.toString(), (Object)maker);
+        }
         this.uiCutterType = new ScrollableList(control, "Cutter Type")
                 .hide()
                 .close()
                 .setWidth(layoutGrid.getControlWidth(ButtonSize.LARGE))
-                .setBarHeight(layoutGrid.getControlHeight(ButtonSize.SMALL));
+                .setBarHeight(layoutGrid.getControlHeight(ButtonSize.SMALL))
+                .setItemHeight(layoutGrid.getControlHeight(ButtonSize.SMALL))
+                .addItems(cutterMap)
+                .setValue(0);
         this.drawingControls[4] = uiCutterType.getName();
 
         this.uiResolutionSlider = new Slider(control, "fieldResolution")
@@ -309,8 +316,9 @@ class ControlView {
     }
 
     private void agentButtonPressed() {
-        this.controlPanel.setLock(ControlPanelLock.HIDE);
-        this.controlPanel.initializeAgent();
+        int selectedIndex = (int)uiCutterType.getValue();
+        CutterMaker maker = (CutterMaker) uiCutterType.getItem(selectedIndex).get("value");
+        this.controlPanel.addAgent(maker);
     }
 
     private void resolutionSliderPressed(float value) {

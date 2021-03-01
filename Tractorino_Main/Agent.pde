@@ -9,13 +9,16 @@ class Agent {
     boolean placing;
 
     Agent() {
-        this.placing = true;
-        // this.controller = new Controller(this);
-        this.pos = new PVector(mouseX, mouseY);
+        this.placing = false;
+        this.scale = 1;
+    }
+
+    Agent(CutterMaker tool) {
+        this.scale = 1;
         this.wheels = new Wheels();
         this.machine = new Machine();
-        this.cutter = new RotaryCutter();
-        this.scale = 1;
+        this.placing = true;
+        this.setCutter(tool);
     }
 
     void render() {
@@ -27,6 +30,12 @@ class Agent {
         // this.axle.show();
         this.machine.show();
         this.cutter.show();
+    }
+
+    void setCutter(CutterMaker tool) {
+        tool.setEnclosingInstance(this);
+        Cutter cutter = tool.createCutter();
+        this.cutter = cutter;
     }
 
     void turn(int dir) {
