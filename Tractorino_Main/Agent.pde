@@ -3,7 +3,6 @@ class Agent {
     Machine machine;
     Cutter cutter;
 
-    PVector pos;
     float scale;
     Controller controller;
     boolean placing;
@@ -27,9 +26,16 @@ class Agent {
             this.wheels.pos.y = mouseY;
         }
         this.wheels.show();
-        // this.axle.show();
         this.machine.show();
         this.cutter.show();
+    }
+
+    void setWheels(PVector pos, float angle) {
+        this.wheels = new Wheels(pos, angle);
+    }
+
+    void setMachine(PVector pos, float angle) {
+        this.machine = new Machine(pos, angle);
     }
 
     void setCutter(CutterMaker tool) {
@@ -84,7 +90,6 @@ class Agent {
 
     class Wheels {
         float steeringAngle;
-        float drawAngle;
         float heading;
         float speedMult;
         PVector pos;
@@ -96,20 +101,27 @@ class Agent {
 
         Wheels() {
             this.steeringAngle = 0;
-            this.drawAngle = 0;
             this.heading = 0;
-            this.pos = Agent.this.pos;
+            this.pos = new PVector(0, 0);
+            this.vel = new PVector(0, 0);
+            this.rolling = false;
+            this.speedMult = .5;
+        }
+
+        Wheels(PVector pos, float heading) {
+            this.steeringAngle = 0;
+            this.heading = heading;
+            this.pos = pos;
             this.vel = new PVector(0, 0);
             this.rolling = false;
             this.speedMult = .5;
         }
 
         void show() {
+            this.heading = Agent.this.machine.angle;
             pushMatrix();
             translate(this.pos.x, this.pos.y);
-            this.heading = Agent.this.machine.angle;
             rotate(heading + PI/2);
-            maintain();
             stroke(255,0,0);
             strokeWeight(2*scale);
             showLeft();
@@ -125,7 +137,7 @@ class Agent {
             float scale = Agent.this.scale;
             pushMatrix();
             translate(-this.wheelWidth * scale, 0);
-            rotate(this.drawAngle);
+            rotate(this.steeringAngle);
             line(0, -this.wheelSize * scale, 0, this.wheelSize * scale);
             popMatrix();
         }
@@ -134,14 +146,9 @@ class Agent {
             float scale = Agent.this.scale;
             pushMatrix();
             translate(this.wheelWidth * scale, 0);
-            rotate(this.drawAngle);
+            rotate(this.steeringAngle);
             line(0, -this.wheelSize * scale, 0, this.wheelSize * scale);
             popMatrix();
-        }
-
-        void maintain() {
-            this.drawAngle = this.steeringAngle + this.heading;
-            this.drawAngle -= this.heading;
         }
 
         void turn(float a) {
@@ -152,6 +159,14 @@ class Agent {
             PVector p = PVector.fromAngle(this.steeringAngle+this.heading);
             this.vel = p.mult(this.speedMult);
             this.pos.add(this.vel);
+        }
+
+        PVector getPosition() {
+            return this.pos;
+        }
+
+        float getAngle() {
+            return this.heading;
         }
     }
 
@@ -165,10 +180,14 @@ class Agent {
           final float wheelSize = 10;
 
         Machine() {
-            this.pos = new PVector(Agent.this.pos.x-(wheelbase*Agent.this.scale), Agent.this.pos.y);
+            this.pos = new PVector(Agent.this.wheels.pos.x-(wheelbase*Agent.this.scale), Agent.this.wheels.pos.y);
             this.angle = 0;
         }
 
+        Machine(PVector pos, float heading) {
+            this.pos = pos;
+            this.angle = heading;
+        }
 
         void show() {
             float scale = Agent.this.scale;
@@ -193,6 +212,8 @@ class Agent {
             float dx = Agent.this.wheels.pos.x - this.pos.x;
             float dy = Agent.this.wheels.pos.y - this.pos.y;
             float angle = atan2(dy, dx);
+            // println(angle);
+            // exit();
             this.angle = angle;
         }
 
@@ -201,12 +222,17 @@ class Agent {
             this.pos.y = Agent.this.wheels.pos.y - sin(this.angle) * (wheelbase*scale);
         }
 
+        PVector getPosition() {
+            return this.pos;
+        }
+
         float getAngle() {
             return this.angle;
         }
     }
 
     abstract class Cutter {
+        CutterMaker cutterType;
         float angle;
         PVector pos;
         float hitchSize;
@@ -228,10 +254,31 @@ class Agent {
             this.pos.x = Agent.this.machine.pos.x - cos(this.angle) * (this.fullLength * scale);
             this.pos.y = Agent.this.machine.pos.y - sin(this.angle) * (this.fullLength * scale);
         }
+
+        void setPosition(PVector pos) {
+            this.pos = pos;
+        }
+
+        void setAngle(float angle) {
+            this.angle = angle;
+        }
+
+        PVector getPosition() {
+            return this.pos;
+        }
+
+        float getAngle() {
+            return this.angle;
+        }
+
+        String getType() {
+            return this.cutterType.toString();
+        }
     }
 
     class RotaryCutter extends Cutter {
         RotaryCutter() {
+            this.cutterType = CutterMaker.ROTARYCUTTER;
             this.hitchSize = 10;
             this.cutSwath = 22;
             this.cutterDepth = 26;
@@ -287,6 +334,7 @@ class Agent {
 
     class DiscMower extends Cutter {
         DiscMower() {
+            this.cutterType = CutterMaker.DISCMOWER;
             this.hitchSize = 10;
             this.cutSwath = 22;
             this.cutterDepth = 10;

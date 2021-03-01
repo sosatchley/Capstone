@@ -1,13 +1,14 @@
 // Shane Atchley
 // CSCI 410
 // Auto-Steer Simulation
-import controlP5.*;
+
 import java.util.Set;
 
 Agent agent;
 HUD hud;
 Field field;
 Error err;
+FieldLoader fl;
 int state;
 int verticalResolution;
 float bx;
@@ -35,6 +36,7 @@ void setup() {
   hud = new HUD(this);
   state = 0;
   currentView = ViewMode.FOLLOW;
+  fl = new FieldLoader();
 }
 
 void draw() {

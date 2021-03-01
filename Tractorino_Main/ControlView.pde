@@ -159,8 +159,8 @@ class ControlView {
                 .addCallback(new CallbackListener() {
                     public void controlEvent(CallbackEvent e) {
                         switch(e.getAction()) {
-                            case(ControlP5.ACTION_PRESSED):
-                                println("This button doesn't work yet. ");
+                            case(ControlP5.ACTION_RELEASED):
+                                fl.loadSessionFile();
                         }
                     }
                     });
@@ -364,6 +364,7 @@ class ControlView {
                             public void controlEvent(CallbackEvent e) {
                                 switch(e.getAction()) {
                                     case(ControlP5.ACTION_RELEASED):
+                                        fl.createSessionFile();
                                 }
                             }
                             });
