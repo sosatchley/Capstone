@@ -4,6 +4,7 @@ float startx;
 float starty;
 float[][] originalVertices;
 int rayState;
+int eraserOn;
 int resolutionReductionFactor;
 int vertexRotation;
 int slopeThreshold;
@@ -23,6 +24,7 @@ this.running = false;
 this.resolutionReductionFactor = 1;
 this.vertexRotation = 0;
 this.rayState = 0;
+this.eraserOn = 0;
 this.slopeThreshold = 0;
 this.translatex = 0;
 this.translatey = 0;
@@ -43,13 +45,21 @@ void draw() {
         highlightNearestVertex();
     }
     drawRays();
+    erase();
 }
 void mousePressed() {
     if (this.shape == null) {
         test();
     } else {
-        println(mouseInShape());
+        if (mouseButton == RIGHT) {
+            stroke(#9c9ccf);
+            strokeWeight(10);
+            point(mouseX, mouseY);
+        } else {
+            println(mouseInShape());
+        }
     }
+
 }
 
 void mouseWheel(MouseEvent event) {
@@ -87,6 +97,16 @@ void keyPressed() {
                 if (rayState == 1) {
                     rayState = 0;
                 } else {rayState++;}
+                println("Ray: " + rayState);
+                println("Erase: " + eraserOn);
+                break;
+            case 'e':
+                if (eraserOn == 1) {
+                    eraserOn = 0;
+                } else {eraserOn++;}
+                println("Ray: " + rayState);
+                println("Erase: " + eraserOn);
+                break;
             default:
                 return;
         }
@@ -236,7 +256,6 @@ void reduceShapeResolutionByFactor(int factor) {
     }
     lowerResolutionShape.endShape(CLOSE);
     this.shape = lowerResolutionShape;
-    println(this.shape.getVertexCount());
 }
 
 PVector highlightNearestVertex() {
@@ -448,4 +467,68 @@ int bruteRayX(int start, int targetColor, int direction) {
         }
     }
     return (direction > 0) ? width : 0;
+}
+
+void erase() {
+
+        switch(this.eraserOn) {
+            case 0:
+                return;
+            case 1:
+                vertShift();
+        }
+}
+
+void vertShift() {
+    PVector[] corners = new PVector[]{new PVector(mouseX-50, mouseY-50),
+                                    new PVector(mouseX+50, mouseY-50),
+                                    new PVector(mouseX-50, mouseY+50),
+                                    new PVector(mouseX+50, mouseY+50)};
+    noFill();
+    stroke(#9871ed);
+    rect(corners[0].x, corners[0].y, 100, 100);
+
+    java.awt.Polygon p = new java.awt.Polygon();
+    for (PVector vert : corners) {
+        p.addPoint(Math.round(vert.x), Math.round(vert.y));
+    }
+
+    for (int i = 0; i < this.originalVertices.length; i++) {
+        float x = getOriginalVertexX(i);
+        float y = getOriginalVertexY(i);
+        if (p.contains(Math.round(x), Math.round(y))) {
+            strokeWeight(5);
+            stroke(#00fff7);
+            point(x, y);
+            this.originalVertices[i] = moveToClosestEdge(x, y, corners);
+        }
+    }
+    reduceShapeResolutionByFactor(0);
+}
+
+float[] moveToClosestEdge(float x, float y, PVector[] verts) {
+    PVector closest = null;
+    float shortest = Float.POSITIVE_INFINITY;
+    PVector secondClosest = null;
+    float secondShortest = Float.POSITIVE_INFINITY;
+    for (PVector vert : verts) {
+        float dist = distBetweenPoints(x, y, vert.x, vert.y);
+        if (closest == null || dist < shortest) {
+            closest = vert;
+            shortest = dist;
+        }
+        if (secondClosest == null || dist < shortest) {
+            secondClosest = vert;
+            secondShortest = dist;
+        }
+    }
+    if (closest.y == secondClosest.y) {
+        println("Y1: " + closest.y);
+        println("Y2: " + secondClosest.y);
+        return new float[]{x, closest.y};
+    } else {
+        println("X1: " + closest.x);
+        println("X2: " + secondClosest.x);
+        return new float[]{closest.x, y};
+    }
 }
